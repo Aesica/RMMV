@@ -131,7 +131,6 @@ Aesica.RaceCore.version = 1.0;
 		{
 			if (attacker.isActor())
 			{
-				console.log(attackerData);
 				iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataClasses[attacker._classId].meta, type); // class
 				jLength = attacker._states.length;
 				for (j = 0; j < jLength; j++) iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataStates[attacker._states[j]].meta, type); // statelist
@@ -186,7 +185,6 @@ Aesica.RaceCore.version = 1.0;
 	$$.Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
 	Game_Action.prototype.makeDamageValue = function(target, critical)
 	{
-		console.log(this);
 		var subject = this.subject();
 		var attackMultiplier = getRacialBonus.call(this, subject, target, "Attack");
 		var defenseMultiplier = getRacialBonus.call(this, target, subject, "Defense");
