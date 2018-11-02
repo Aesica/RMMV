@@ -109,8 +109,6 @@ Aesica.RaceCore.version = 1.0;
 
 (function($$)
 {
-	$$.values = $$.values || {};
-	
 	$$.pluginParameters = PluginManager.parameters("AES_RaceCore");
 	$$._defaultUnknown = $$.pluginParameters["Unknown Race Text"];
 	
