@@ -190,25 +190,3 @@ Aesica.RaceCore.version = 1.0;
 	}
 	
 })(Aesica.RaceCore);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
