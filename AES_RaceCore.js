@@ -20,6 +20,8 @@ Aesica.RaceCore.version = 1.3;
 * @default ["Humanoid","Beast","Avian","Aquatic","Dragon","Demon","Undead"]
 * 
 * @help
+* For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+*
 * ===================
 * Introduction
 * ===================
