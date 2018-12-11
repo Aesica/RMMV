@@ -6,7 +6,7 @@ Unless otherwise noted, these plugins are fully compatible with the Yanfly suite
 Contains several small (but useful) improvements to the basic engine, including:
 - A basic "Limit Break" system
 - Option to disable Attack, Guard, or Item
-- Damage formula functions for use in the formula box, allowing for later tweaks in 1 place instead of in every skill should you choose to change your formula later
+- Damage formula functions for use in the formula box, allowing for later tweaks in 1 place instead of in every skill or item
 - Methods to access a battler's equipped weapon stats (a.weaponAtk() for example)
 - Minimum and/or maximum damage caps
 - Plugin commands to give players an item/gold, play a sound, and display a message in a unified way
