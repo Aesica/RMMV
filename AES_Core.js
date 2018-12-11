@@ -233,8 +233,8 @@ Aesica.Core.version = 1.21;
 * Aesica.Core.damage(1000)
 * // 1000 fixed damage
 * 
-* Aesica.Core.heal(a.mag, 3)
-* // uses the healing formula from the plugin parameters to combine a.mag with
+* Aesica.Core.heal(a.mat, 3)
+* // uses the healing formula from the plugin parameters to combine a.mat with
 * // a multiplier of 3
 * 
 * Aesica.Core.damage(a.weaponAtk(), 10, b.def)
