@@ -1,17 +1,23 @@
 // Plugin Name: Race Core
 // Filename: AES_RaceCore.js
-
+var Imported = Imported || {};
+Imported.AES_RaceCore = true;
 var Aesica = Aesica || {};
 Aesica.RaceCore = Aesica.RaceCore || {};
-Aesica.RaceCore.version = 1.0;
-
+Aesica.RaceCore.version = 1.3;
 /*:
 * @plugindesc Adds creature/player races, plus ways to deal or receive modified damage based on these races.
 *
 * @author Aesica
 *
 * @param Unknown Race Text
+* @desc The text to return via getRace() when no race is specified
 * @default Unknown
+*
+* @param Race List
+* @desc List of races.  Note that the first race is considered to be at index 1, not 0
+* @type text[]
+* @default ["Humanoid","Beast","Avian","Aquatic","Dragon","Demon","Undead"]
 * 
 * @help
 * ===================
@@ -50,8 +56,11 @@ Aesica.RaceCore.version = 1.0;
 * <Magical Defense vs RaceType: n> magical incoming attacks from this racetype are multiplied by n
 * <Certain Defense vs RaceType: n> certain hit incoming attacks from this racetype are multiplied by n
 * 
-* - ALL NOTE TAG SYNTAX IS CASE SENSITIVE.  <attack vs orc: 2> won't work, <Attack vs Orc: 2> will
-* - Replace "RaceType" with the desired race (ex: Humanoid, Dragonkin, Celestial, Robot, Potato, etc)
+* - ALL NOTE TAG SYNTAX IS CASE SENSITIVE.  <attack vs 1: 2> won't work, <Attack vs 1: 2> will.
+* <Attack vs undead: 2> won't work against "Undead" but <Attack vs Undead: 2> will.
+* - Replace "RaceType" with the desired race text (ex: Humanoid, Dragonkin, Celestial, Robot, Potato,
+* etc) or race ID pointing to a race defined in the plugin parameters.  Be aware that the first race
+* is at index 1, as 0 is reserved for the Unknown racial identifier
 * - To assign more than one race to an actor/enemy, separate with commas (ex: <Race: Undead, Plant>
 * - Replace "n" with the desired multiplier. (ex: 0.5 for 50% damage, 2.5 for 250% damage, etc)
 * - All modifiers are multiplicative with one another.
@@ -106,15 +115,48 @@ Aesica.RaceCore.version = 1.0;
 * Same as above, but for the specified battler.  Ideal for your Libra/Scan
 * abilities and whatnot! :D
 */
-
 (function($$)
 {
 	$$.pluginParameters = PluginManager.parameters("AES_RaceCore");
-	$$._defaultUnknown = $$.pluginParameters["Unknown Race Text"];
+	$$.params = {};
+	$$.params.defaultUnknown = $$.pluginParameters["Unknown Race Text"];
+	$$.params.raceList = safeJSONParse($$.pluginParameters["Race List"]) || [];
+	$$.params.raceList.splice(0, 0, $$.params.defaultUnknown);
+	$$.params.raceLookup = (function(raceList)
+	{
+		var oReturn = {};
+		var i, iLength = raceList.length;
+		for (i = 0; i < iLength; i++)
+		{
+			oReturn[raceList[i]] = i;
+		}
+		return oReturn;
+	})($$.params.raceList);
 	
 	function trimWhiteSpace(text)
 	{
 		return text.replace(/^[ ]*/, "").replace(/[ ]*$/, "");
+	}
+	
+	function safeJSONParse(jsonData)
+	{
+		var oReturn;
+		try
+		{
+			oReturn = JSON.parse(jsonData);
+		}
+		catch(e)
+		{
+			console.log("Invalid JSON data in plugin paramters: " + jsonData);
+			console.log(jsonData);
+		}
+		return oReturn;
+	}
+	
+	function getRaceNameFromID(raceID)
+	{
+		var testValue = raceID ? +raceID : 0;
+		return isNaN(testValue) ? raceID : $$.params.raceList[testValue];
 	}
 	
 	function getRacialBonus(attacker, defender, type)
@@ -135,8 +177,19 @@ Aesica.RaceCore.version = 1.0;
 				jLength = attacker._equips.length;
 				for (j = 0; j < jLength; j++)
 				{
-					if (attacker._equips[j]._dataClass == "weapon") iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataWeapons[attacker._equips[j]._itemId].meta, type); // weapons
-					else if (attacker._equips[j]._dataClass == "armor") iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataArmors[attacker._equips[j]._itemId].meta, type); // armors
+					if (attacker._equips[j]._itemId > 0)
+					{
+						if (attacker._equips[j]._dataClass == "weapon")
+						{
+							console.log($dataWeapons[attacker._equips[j]._itemId]);
+							iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataWeapons[attacker._equips[j]._itemId].meta, type); // weapons
+						}
+						else if (attacker._equips[j]._dataClass == "armor")
+						{
+							console.log($dataArmors[attacker._equips[j]._itemId]);
+							iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataArmors[attacker._equips[j]._itemId].meta, type); // armors
+						}
+					}
 				}
 			}
 			iReturn *= getModifierFromMeta.call(this, defenderRace[i], attackerData.meta, type); // battler
@@ -153,13 +206,18 @@ Aesica.RaceCore.version = 1.0;
 		if (meta["Physical " + type + " vs " + raceName] && this.isPhysical()) iReturn *= +meta["Physical " + type + " vs " + raceName];
 		else if (meta["Magical " + type + " vs " + raceName] && this.isMagical()) iReturn *= +meta["Magical " + type + " vs " + raceName];
 		else if (meta["Certain " + type + " vs " + raceName] && this.isCertainHit()) iReturn *= +meta["Certain " + type + " vs " + raceName];
+		raceName = $$.params.raceLookup[raceName];
+		if (meta[type + " vs " + raceName]) iReturn *= +meta[type + " vs " + raceName];
+		if (meta["Physical " + type + " vs " + raceName] && this.isPhysical()) iReturn *= +meta["Physical " + type + " vs " + raceName];
+		else if (meta["Magical " + type + " vs " + raceName] && this.isMagical()) iReturn *= +meta["Magical " + type + " vs " + raceName];
+		else if (meta["Certain " + type + " vs " + raceName] && this.isCertainHit()) iReturn *= +meta["Certain " + type + " vs " + raceName];
 		return iReturn;
 	}
 	
 	$$.getRace = function(actorOrEnemy)
 	{
-		var aReturn = actorOrEnemy.meta.Race;
-		if (!aReturn) aReturn = [$$._defaultUnknown];
+		var raceID, aReturn = actorOrEnemy.meta.Race;
+		if (!aReturn) aReturn = [$$.params.raceList[0]];
 		else
 		{
 			aReturn = aReturn.split(",");
@@ -167,6 +225,12 @@ Aesica.RaceCore.version = 1.0;
 			for (i = 0; i < iLength; i++)
 			{
 				aReturn[i] = trimWhiteSpace(aReturn[i]);
+				raceID = +aReturn[i];
+				if (!isNaN(raceID))
+				{
+					if (raceID > 0 && raceID < $$.params.raceList.length) aReturn[i] = $$.params.raceList[raceID];
+					else aReturn[i] = $$.params.raceList[0];
+				}
 			}
 		}
 		return aReturn;
@@ -174,10 +238,8 @@ Aesica.RaceCore.version = 1.0;
 	
 	Game_Battler.prototype.getRace = function()
 	{
-		var aReturn, i, iLength;
-		if (this.isEnemy()) aReturn = $$.getRace($dataEnemies[this._enemyId]);
-		else aReturn = $$.getRace($dataActors[this._actorId]);
-		return aReturn;
+		var target = $dataActors[this._actorId] || $dataEnemies[this._enemyId]
+		return $$.getRace(target)
 	}
 	
 	$$.Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
@@ -186,7 +248,9 @@ Aesica.RaceCore.version = 1.0;
 		var subject = this.subject();
 		var attackMultiplier = getRacialBonus.call(this, subject, target, "Attack");
 		var defenseMultiplier = getRacialBonus.call(this, target, subject, "Defense");
-		return Math.round($$.Game_Action_makeDamageValue.call(this, target, critical) * attackMultiplier * defenseMultiplier);
+		var iReturn = Math.round($$.Game_Action_makeDamageValue.call(this, target, critical) * attackMultiplier * defenseMultiplier);
+		if (Imported.AES_Core) iReturn = Aesica.Core.applyDamageCap(iReturn);
+		return iReturn;
 	}
 	
 })(Aesica.RaceCore);
