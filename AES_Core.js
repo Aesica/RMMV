@@ -128,6 +128,8 @@ Aesica.Core.version = 1.21;
 * @off Disable
 * @default true
 * @help
+* For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+*
 * List of things this plugin does:
 *
 * ----------------------------------------------------------------------
