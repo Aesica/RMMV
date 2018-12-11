@@ -2,7 +2,7 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 1.2;
+Aesica.Core.version = 1.21;
 /*:
 * @plugindesc Contains several enhancements for various aspects of RMMV.
 *
@@ -118,15 +118,15 @@ Aesica.Core.version = 1.2;
 * @type boolean
 * @on Instant
 * @off Standard
-* @default false
+* @default true
 *
 * @param Shop Patch
 * @parent ---Other---
-* @desc Enable the shop 'Quantity Possessed' patch, which includes equipped weapons and armor?
+* @desc Enable the shop 'Quantity Possessed' patch, which includes equipped weapons and armor
 * @type boolean
 * @on Enable
 * @off Disable
-* @default false
+* @default true
 * @help
 * List of things this plugin does:
 *
