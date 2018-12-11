@@ -270,8 +270,8 @@ Aesica.Core.version = 1.21;
 * Unified Obtain Item Framework
 * Allows you to easily give an item to players and inform them about what
 * they got in a unified way.  This bypasses the need to pop up a message window,
-* play a sound, etc in the same exact same way every time they open a chest,
-* are given something by an npc, etc.
+* play a sound, etc in the exact same way every time they open a chest, are
+* given something by an npc, etc.
 *
 * Plugin Commands:
 *
