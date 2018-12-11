@@ -1,4 +1,8 @@
-This is the dumping ground for my (small) collection of JavaScript Plugins for RMMV.  Anything hosted here is free to use in both free and commercial projects as long as you give me credit.  A copy of your game (once completed) would be nice so I can see how my scripts are being used, but isn't required.  So yeah, enjoy or whatever!
+# Aesica's RMMV Plugins - Terms of Use
+This is the dumping ground for my (small) collection of JavaScript Plugins for RMMV.
+- Anything hosted here is free to use in both free and commercial projects as long as you give me credit.
+- You may edit the code as needed to fit your game
+- A copy of your game (once completed) would be nice so I can see how my scripts are being used, but isn't required.
 
 Unless otherwise noted, these plugins are fully compatible with the Yanfly suite.
 
