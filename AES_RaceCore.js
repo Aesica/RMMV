@@ -4,7 +4,7 @@ var Imported = Imported || {};
 Imported.AES_RaceCore = true;
 var Aesica = Aesica || {};
 Aesica.RaceCore = Aesica.RaceCore || {};
-Aesica.RaceCore.version = 1.31;
+Aesica.RaceCore.version = 1.32;
 /*:
 * @plugindesc Adds creature/player races, plus ways to deal or receive modified damage based on these races.
 *
@@ -140,7 +140,8 @@ Aesica.RaceCore.version = 1.31;
 	
 	function getTag(tag, note)
 	{
-		return note.match(RegExp("<" + tag + "[ ]*:[ ]*(.+)>", "i"))[1];
+		var result = note.match(RegExp("<" + tag + "[ ]*:[ ]*(.+)>", "i"));
+		return result ? result[1] : tagExists(tag, note);
 	}
 	
 	function tagExists(tag, note)
