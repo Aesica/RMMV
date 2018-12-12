@@ -4,7 +4,7 @@ var Imported = Imported || {};
 Imported.AES_RaceCore = true;
 var Aesica = Aesica || {};
 Aesica.RaceCore = Aesica.RaceCore || {};
-Aesica.RaceCore.version = 1.3;
+Aesica.RaceCore.version = 1.31;
 /*:
 * @plugindesc Adds creature/player races, plus ways to deal or receive modified damage based on these races.
 *
@@ -58,8 +58,6 @@ Aesica.RaceCore.version = 1.3;
 * <Magical Defense vs RaceType: n> magical incoming attacks from this racetype are multiplied by n
 * <Certain Defense vs RaceType: n> certain hit incoming attacks from this racetype are multiplied by n
 * 
-* - ALL NOTE TAG SYNTAX IS CASE SENSITIVE.  <attack vs 1: 2> won't work, <Attack vs 1: 2> will.
-* <Attack vs undead: 2> won't work against "Undead" but <Attack vs Undead: 2> will.
 * - Replace "RaceType" with the desired race text (ex: Humanoid, Dragonkin, Celestial, Robot, Potato,
 * etc) or race ID pointing to a race defined in the plugin parameters.  Be aware that the first race
 * is at index 1, as 0 is reserved for the Unknown racial identifier
@@ -130,7 +128,7 @@ Aesica.RaceCore.version = 1.3;
 		var i, iLength = raceList.length;
 		for (i = 0; i < iLength; i++)
 		{
-			oReturn[raceList[i]] = i;
+			oReturn[raceList[i].toLowerCase()] = i;
 		}
 		return oReturn;
 	})($$.params.raceList);
@@ -138,6 +136,16 @@ Aesica.RaceCore.version = 1.3;
 	function trimWhiteSpace(text)
 	{
 		return text.replace(/^[ ]*/, "").replace(/[ ]*$/, "");
+	}
+	
+	function getTag(tag, note)
+	{
+		return note.match(RegExp("<" + tag + "[ ]*:[ ]*(.+)>", "i"))[1];
+	}
+	
+	function tagExists(tag, note)
+	{
+		return RegExp("<" + tag + ".*>", "i").test(note);
 	}
 	
 	function safeJSONParse(jsonData)
@@ -173,9 +181,9 @@ Aesica.RaceCore.version = 1.3;
 		{
 			if (attacker.isActor())
 			{
-				iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataClasses[attacker._classId].meta, type); // class
+				iReturn *= getModifier.call(this, defenderRace[i], $dataClasses[attacker._classId].note, type); // class
 				jLength = attacker._states.length;
-				for (j = 0; j < jLength; j++) iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataStates[attacker._states[j]].meta, type); // statelist
+				for (j = 0; j < jLength; j++) iReturn *= getModifier.call(this, defenderRace[i], $dataStates[attacker._states[j]].note, type); // statelist
 				jLength = attacker._equips.length;
 				for (j = 0; j < jLength; j++)
 				{
@@ -183,42 +191,40 @@ Aesica.RaceCore.version = 1.3;
 					{
 						if (attacker._equips[j]._dataClass == "weapon")
 						{
-							console.log($dataWeapons[attacker._equips[j]._itemId]);
-							iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataWeapons[attacker._equips[j]._itemId].meta, type); // weapons
+							iReturn *= getModifier.call(this, defenderRace[i], $dataWeapons[attacker._equips[j]._itemId].note, type); // weapons
 						}
 						else if (attacker._equips[j]._dataClass == "armor")
 						{
-							console.log($dataArmors[attacker._equips[j]._itemId]);
-							iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataArmors[attacker._equips[j]._itemId].meta, type); // armors
+							iReturn *= getModifier.call(this, defenderRace[i], $dataArmors[attacker._equips[j]._itemId].note, type); // armors
 						}
 					}
 				}
 			}
-			iReturn *= getModifierFromMeta.call(this, defenderRace[i], attackerData.meta, type); // battler
-			if (this._item._dataClass == "skill") iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataSkills[this._item._itemId].meta, type); // skill
-			else if (this._item._dataClass == "item") iReturn *= getModifierFromMeta.call(this, defenderRace[i], $dataItems[this._item._itemId].meta, type); // skill
+			iReturn *= getModifier.call(this, defenderRace[i], attackerData.note, type); // battler
+			if (this._item._dataClass == "skill") iReturn *= getModifier.call(this, defenderRace[i], $dataSkills[this._item._itemId].note, type); // skill
+			else if (this._item._dataClass == "item") iReturn *= getModifier.call(this, defenderRace[i], $dataItems[this._item._itemId].note, type); // skill
 		}
 		return iReturn;
 	}
 	
-	function getModifierFromMeta(raceName, meta, type)
+	function getModifier(raceName, note, type)
 	{
 		var iReturn = 1;
-		if (meta[type + " vs " + raceName]) iReturn *= +meta[type + " vs " + raceName];
-		if (meta["Physical " + type + " vs " + raceName] && this.isPhysical()) iReturn *= +meta["Physical " + type + " vs " + raceName];
-		else if (meta["Magical " + type + " vs " + raceName] && this.isMagical()) iReturn *= +meta["Magical " + type + " vs " + raceName];
-		else if (meta["Certain " + type + " vs " + raceName] && this.isCertainHit()) iReturn *= +meta["Certain " + type + " vs " + raceName];
-		raceName = $$.params.raceLookup[raceName];
-		if (meta[type + " vs " + raceName]) iReturn *= +meta[type + " vs " + raceName];
-		if (meta["Physical " + type + " vs " + raceName] && this.isPhysical()) iReturn *= +meta["Physical " + type + " vs " + raceName];
-		else if (meta["Magical " + type + " vs " + raceName] && this.isMagical()) iReturn *= +meta["Magical " + type + " vs " + raceName];
-		else if (meta["Certain " + type + " vs " + raceName] && this.isCertainHit()) iReturn *= +meta["Certain " + type + " vs " + raceName];
+		if (tagExists(type + " vs " + raceName, note)) iReturn *= +getTag(type + " vs " + raceName, note);
+		if (tagExists("physical " + type + " vs " + raceName, note) && this.isPhysical()) iReturn *= +getTag("physical " + type + " vs " + raceName, note);
+		else if (tagExists("magical " + type + " vs " + raceName, note) && this.isMagical()) iReturn *= +getTag("magical " + type + " vs " + raceName, note);
+		else if (tagExists("certain " + type + " vs " + raceName, note) && this.isCertainHit()) iReturn *= +getTag("certain " + type + " vs " + raceName, note);
+		raceName = $$.params.raceLookup[raceName.toLowerCase()];
+		if (tagExists(type + " vs " + raceName, note)) iReturn *= +getTag(type + " vs " + raceName, note);
+		if (tagExists("physical " + type + " vs " + raceName, note) && this.isPhysical()) iReturn *= +getTag("physical " + type + " vs " + raceName, note);
+		else if (tagExists("magical " + type + " vs " + raceName, note) && this.isMagical()) iReturn *= +getTag("magical " + type + " vs " + raceName, note);
+		else if (tagExists("certain " + type + " vs " + raceName, note) && this.isCertainHit()) iReturn *= +getTag("certain " + type + " vs " + raceName, note);
 		return iReturn;
 	}
 	
 	$$.getRace = function(actorOrEnemy)
 	{
-		var raceID, aReturn = actorOrEnemy.meta.Race;
+		var raceID, aReturn = getTag("Race", actorOrEnemy.note);
 		if (!aReturn) aReturn = [$$.params.raceList[0]];
 		else
 		{
@@ -248,8 +254,8 @@ Aesica.RaceCore.version = 1.3;
 	Game_Action.prototype.makeDamageValue = function(target, critical)
 	{
 		var subject = this.subject();
-		var attackMultiplier = getRacialBonus.call(this, subject, target, "Attack");
-		var defenseMultiplier = getRacialBonus.call(this, target, subject, "Defense");
+		var attackMultiplier = getRacialBonus.call(this, subject, target, "attack");
+		var defenseMultiplier = getRacialBonus.call(this, target, subject, "defense");
 		var iReturn = Math.round($$.Game_Action_makeDamageValue.call(this, target, critical) * attackMultiplier * defenseMultiplier);
 		if (Imported.AES_Core) iReturn = Aesica.Core.applyDamageCap(iReturn);
 		return iReturn;
