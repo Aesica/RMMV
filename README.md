@@ -9,8 +9,13 @@ Unless otherwise noted, these plugins are fully compatible with the Yanfly suite
 
 ### AES_Core
 Contains several small (but useful) improvements to the basic engine, including:
+- Config manager initial settings control
+- Self switch management fuctions for use with event note tags (many are current map only)
+- Master volume control
+- Note tag parsing functions
 - A basic "Limit Break" system
 - Option to disable Attack, Guard, or Item
+- Note tag for replacing Attack with other abilities
 - Damage formula functions for use in the formula box, allowing for later tweaks in 1 place instead of in every skill or item
 - Methods to access a battler's equipped weapon stats (a.weaponAtk() for example)
 - Minimum and/or maximum damage caps
