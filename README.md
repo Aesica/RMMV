@@ -10,7 +10,7 @@ Unless otherwise noted, these plugins are fully compatible with the Yanfly suite
 ### AES_Core
 Contains several small (but useful) improvements to the basic engine, including:
 - Config manager initial settings control
-- Self switch management fuctions for use with event note tags (many are current map only)
+- Self switch management functions for use with event note tags (many are current map only)
 - Master volume control
 - Note tag parsing functions
 - A basic "Limit Break" system
