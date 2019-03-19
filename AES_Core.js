@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 1.30;
+Aesica.Core.version = 1.40;
 /*:
-* @plugindesc v1.30 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v1.40 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -162,6 +162,13 @@ Aesica.Core.version = 1.30;
 * @desc The value to be returned by weapon stat functions if no weapon is equipped.  This is processed as an eval.
 * @default 1
 *
+* @param Critical Hit Multiplier
+* @parent Combat Formulas
+* @desc Critical hit multiplier.  Default: 3
+* @type number
+* @min 0
+* @default 3
+*
 * @param Universal Obtain Item
 * @desc Enable the universal "Obtain Item" functionality provided by this plugin?
 * @type boolean
@@ -210,6 +217,12 @@ Aesica.Core.version = 1.30;
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
+* @param Shop Sell Modifier
+* @parent Shop Patch
+* @desc Set the multiplier for an item's default selling price.  (default 0.5)
+* @type text
+* @default 0.5
+*
 * Since this plugin offers so many things, the design is presented in a modular
 * format.  Disabling each section in the plugin parameters will prevent any of
 * the associated components from even loading, so if you disable something
@@ -220,6 +233,7 @@ Aesica.Core.version = 1.30;
 * The following components are always on and should not have conflicts with 
 * other plugins:
 * - Note tag parsing functions
+* - Plugin command exec function
 * - Self switch manipulation
 * - Forced vehicle exit
 * - Instant Text*
@@ -257,6 +271,17 @@ Aesica.Core.version = 1.30;
 * tag can be placed on actors, classes, weapons, and states to replace the
 * attack command with another skill.
 *
+* <Guard>
+* Flags an ability as a "Guard" ability for use with the following 2 note tags.
+* 
+* <Guard State: n, n, ...n>
+* When a battler uses guard, the target (usually the user) will be affected
+* by the specified state(s).  This tag applies to actors/enemies, classes,
+* equips, and states.
+*
+* <Guard State All: n, n, ...n>
+* Same as <Guard State> but applies the state(s) to all allies of the target.
+*
 * ----------------------------------------------------------------------
 *
 * Damage/Healing Formulas
@@ -270,6 +295,12 @@ Aesica.Core.version = 1.30;
 * Allows you to set minimum and maximum damage caps.  For example, if you want
 * all attacks to deal at least 1 point of damage, but no more than 9999 damage,
 * you can use these settings to achieve that.
+*
+* <Critical Bonus: n>
+* In addition to being able to change the default critical modifier, individual
+* actors/enemies, classes, equipment, states, or skills can further adjust this
+* using note tags.  For example, <Critical Bonus: 1.5> will multiply the damage
+* of a critical hit by 1.5 in addition to the default critical bonus.
 *
 * Unarmed Weapon Value
 * This is the value that will be returned by the weaponStat functions described
@@ -307,31 +338,41 @@ Aesica.Core.version = 1.30;
 * Allows you to apply a variance to a damage or healing result, although in 
 * most cases, this is done for you via the formula box
 *
-* Game_Battler.prototype.weaponMhp()
-* Game_Battler.prototype.weaponMmp()
-* Game_Battler.prototype.weaponAtk()
-* Game_Battler.prototype.weaponDef()
-* Game_Battler.prototype.weaponMat()
-* Game_Battler.prototype.weaponMdf()
-* Game_Battler.prototype.weaponAgi()
-* Game_Battler.prototype.weaponLuk()
+* Game_BattlerBase.prototype.weaponMhp()
+* Game_BattlerBase.prototype.weaponMmp()
+* Game_BattlerBase.prototype.weaponAtk()
+* Game_BattlerBase.prototype.weaponDef()
+* Game_BattlerBase.prototype.weaponMat()
+* Game_BattlerBase.prototype.weaponMdf()
+* Game_BattlerBase.prototype.weaponAgi()
+* Game_BattlerBase.prototype.weaponLuk()
 * Retrieves the specified stat from the battler's equipped weapon (or weapons)
 * for use in formulas that only factor in weapon strength, which can be used
 * in damage formulas.  For example:  a.weaponAtk() * 5 - b.def
 * If the battler is an enemy, it returns their associated base parameter 
 * instead since enemies don't use weapons
 *
-* Game_Battler.prototype.weaponStat(statID)
+* Game_BattlerBase.prototype.weaponStat(statID)
 * Same as above, but allows the stat to be referenced by its ID.  Examples:
 * a.weaponStat(2) // same as a.weaponAtk()
 * a.weaponStat(4) // same as a.weaponMat()
 *
-* Game_Battler.prototype.anyStateAffected(1, 3, 27, ...etc)
+* Game_BattlerBase.prototype.tagStat(tag)
+* Allows the reading of extra quasi-stats set via note tags on actors, enemies,
+* classes, equipment, and states.  For example, a weapon with <Psionic: 50> 
+* in its note box and an accessory with <Psionic: 25> in its note box vs a foe
+* with <Psionic Resist: 35> in its note box can be used in the damage formula
+* box as follows:
+* a.tagStat("psionic") - b.tagStat("psionic resist")
+* As a result, the target will take 40 (50 + 25 - 35) damage before variance
+* 
+*
+* Game_BattlerBase.prototype.anyStateAffected(1, 3, 27, ...etc)
 * Returns true if the specified battler has ANY of the listed states.  Examples:
 * a.anyStateAffected(3, 14)
 * b.anyStateAffected(27, 28, 29, 41, 47)
 *
-* Game_Battler.prototype.allStateAffected(1, 3, 27, ...etc)
+* Game_BattlerBase.prototype.allStateAffected(1, 3, 27, ...etc)
 * Returns true if the specified battler ALL of the listed states.  Examples:
 * a.alltateAffected(3, 14)
 * b.allStateAffected(27, 28, 29, 41, 47)
@@ -420,6 +461,18 @@ Aesica.Core.version = 1.30;
 *
 * ----------------------------------------------------------------------
 *
+* Plugin Command execution function
+* Pretty simple really, an easy (easier, anyway) way to execute plugin commands
+* via script calls using the exact same syntax as via events.  Examples below.
+*
+* Event version:
+* Plugin Command : Butts 1 2
+*
+* Script version:
+* Aesica.Core.pluginCommand("Butts 1 2");
+*
+* ----------------------------------------------------------------------
+*
 * Note tag parsing functions
 * Unlike using the meta property, these are intended to function in a 
 * case-insensitive manner, so <butts>, <Butts>, and <BUTTS> would all be
@@ -467,12 +520,11 @@ Aesica.Core.version = 1.30;
 
 (function($$)
 {
-	$$.values = $$.values || {};
+	$$.values = {};
 	$$.values.ITEM_TYPE_ITEM = 0;
 	$$.values.ITEM_TYPE_WEAPON = 1;
 	$$.values.ITEM_TYPE_ARMOR = 2;
 	$$.values.ITEM_TYPE_GOLD = 3;
-	$$.values.ITEM_TYPES = {"item":$$.values.ITEM_TYPE_ITEM, "weapon":$$.values.ITEM_TYPE_WEAPON, "armor":$$.values.ITEM_TYPE_ARMOR, "gold":$$.values.ITEM_TYPE_GOLD};
 	
 	$$.pluginParameters = PluginManager.parameters("AES_Core");
 	$$.params = {};
@@ -493,6 +545,7 @@ Aesica.Core.version = 1.30;
 	$$.params.volumeOffset = +$$.pluginParameters["Volume Adjustment Offset"] || 10;
 	$$.params.instantText = String($$.pluginParameters["Instant Text"]).toLowerCase() === "false" ? false : true;
 	$$.params.shopPatch = String($$.pluginParameters["Shop Patch"]).toLowerCase() === "false" ? false : true;
+	$$.params.shopSellModifier = +$$.pluginParameters["Shop Sell Modifier"] || 0;
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
 	$$.params.limitThreshold = +$$.pluginParameters["Limit Break Threshold"] || 0;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
@@ -503,6 +556,7 @@ Aesica.Core.version = 1.30;
 	$$.params.minDamage = +$$.pluginParameters["Minimum Damage"] || 0;
 	$$.params.maxDamage = +$$.pluginParameters["Maximum Damage"] || 0;
 	$$.params.unarmedValue = $$.pluginParameters["Unarmed Weapon Value"];
+	$$.params.critMultiplier = +$$.pluginParameters["Critical Hit Multiplier"] || 0;
 	$$.params.itemObtainText = String($$.pluginParameters["Item Obtain Message"]);
 	$$.params.itemObtainSound = String($$.pluginParameters["Item Obtain Sound"]);
 	$$.params.itemObtainVolume = +$$.pluginParameters["Item Obtain Volume"];
@@ -519,10 +573,10 @@ Aesica.Core.version = 1.30;
 		$$.Game_Interpreter_pluginCommand.call(this, command, args);
 		if (command === "InstantTextOn") $$.setInstantText(true);
 		else if (command === "InstantTextOff") $$.setInstantText(false);
-		else if (command === "ObtainItem" && $$.params.section.universalObtainItem) $$.obtainItemPluginCommand(0, args);
-		else if (command === "ObtainWeapon" && $$.params.section.universalObtainItem) $$.obtainItemPluginCommand(1, args);
-		else if (command === "ObtainArmor" && $$.params.section.universalObtainItem) $$.obtainItemPluginCommand(2, args);
-		else if (command === "ObtainGold" && $$.params.section.universalObtainItem) $$.obtainGoldPluginCommand(args);
+		else if (command === "ObtainItem" && $$.params.section.universalObtainItem) $$.obtainItem(0, args[0], args[1]);
+		else if (command === "ObtainWeapon" && $$.params.section.universalObtainItem) $$.obtainItem(1, args[0], args[1]);
+		else if (command === "ObtainArmor" && $$.params.section.universalObtainItem) $$.obtainItem(2, args[0], args[1]);
+		else if (command === "ObtainGold" && $$.params.section.universalObtainItem) $$.obtainItem(3, 0, args[0]);
 		else if (command === "ForceExitVehicle") $$.forceExitVehicle(args);
 	}
 /**-------------------------------------------------------------------
@@ -591,6 +645,17 @@ Aesica.Core.version = 1.30;
 	}
 	
 /**-------------------------------------------------------------------
+	Plugin command exec
+//-------------------------------------------------------------------*/	
+	
+	$$.pluginCommand = function(args)
+	{
+		args = args.split(" ");
+		var command = args.shift();
+		Game_Interpreter.prototype.pluginCommand.call(Game_Interpreter, command, args);
+	}
+	
+/**-------------------------------------------------------------------
 	Self-Switch manipulation & event tag counting
 //-------------------------------------------------------------------*/	
 	
@@ -601,7 +666,7 @@ Aesica.Core.version = 1.30;
 		var oReturn = {}
 		oReturn.changed = 0;
 		oReturn.total = iLength;
-		if (ignoreCase) switchID = switchID.toLowerCase();
+		if (ignoreCase && switchID) switchID = switchID.toLowerCase();
 		for (i = 0; i < iLength; i++)
 		{
 			bClearSwitch = false;
@@ -669,6 +734,10 @@ Aesica.Core.version = 1.30;
 		return iReturn;
 	}
 	
+	$$.eventTag = function(tag)
+	{
+		return $$.getTag.call($gameMap.event(this._eventId).event(), tag);
+	}	
 
 /**-------------------------------------------------------------------	
 	Note tag parsing functions
@@ -722,59 +791,54 @@ Aesica.Core.version = 1.30;
 
 	if ($$.params.section.universalObtainItem)
 	{
-		$$.obtainGoldPluginCommand = function(args)
-		{
-			args[0] = +args[0];
-			if (isNaN(args[0]) || args[0] < 1) console.log("ObtainGold requires 1 positive integer argument (goldAmount)");
-			else $$.obtainItem($$.values.ITEM_TYPE_GOLD, 0, args[0]);
-		}
-		
-		$$.obtainItemPluginCommand = function(type, args)
-		{
-			var itemID = +args[0];
-			var quantity = +args[1] || 1;
-			if (isNaN(itemID) || itemID < 1)
-			{
-				console.log("ObtainItem/ObtainWeapon/ObtainArmor: requires at least 1 non-zero integer argument (itemID, quantity?=1");
-			}
-			else
-			{
-				$$.obtainItem(type, itemID, quantity);
-			}
-		}
-		
 		$$.obtainItem = function(itemType, itemID, quantity)
 		{
-			if (typeof itemType === "string") itemType = $$.values.ITEM_TYPES[itemType];
+			console.log(itemType + "::" + itemID + "::" + quantity);
+			var failure = false;
+			try
+			{
+				itemType = +itemType || 0;
+				itemID = +eval(itemID) || 0;
+				quantity = +eval(quantity) || 1;
+			}
+			catch(e)
+			{
+				failure = true;
+			}
 			var item, message = $$.params.itemObtainText;
 			var rxItemIcon = /%i/gi;
 			var rxItemName = /%n/gi;
 			var rxItemQuantity = /%q/gi;
 			var se = {"name":$$.params.itemObtainSound, "pan":0, "pitch":100, "volume":$$.params.itemObtainVolume};
-			if (!isNaN(itemType) && quantity > 0 && itemType >= 0)
+			if (itemType == $$.values.ITEM_TYPE_GOLD)
+			{
+				if (quantity > 0)
+				{
+					$gameParty.gainGold(quantity);
+					message = message.replace(rxItemIcon, "\\I[" + $$.params.itemCurrencyIcon + "]").replace(rxItemName, "\\G").replace(rxItemQuantity, quantity);
+				}
+				else failure = true;
+			}
+			else
 			{
 				if (itemType === $$.values.ITEM_TYPE_ITEM) item = $dataItems[itemID];
 				else if (itemType === $$.values.ITEM_TYPE_WEAPON) item = $dataWeapons[itemID];
 				else if (itemType === $$.values.ITEM_TYPE_ARMOR) item = $dataArmors[itemID];
 				
-				if (itemType === $$.values.ITEM_TYPE_GOLD)
-				{
-					$gameParty.gainGold(quantity);
-					message = message.replace(rxItemIcon, "\\I[" + $$.params.itemCurrencyIcon + "]").replace(rxItemName, "\\G").replace(rxItemQuantity, quantity);
-				}
-				else
+				if (item)
 				{
 					$gameParty.gainItem(item, quantity);
 					message = message.replace(rxItemIcon, "\\I[" + item.iconIndex + "]").replace(rxItemName, item.name).replace(rxItemQuantity, quantity);
 				}
+				else failure = true;
 			}
-			else
+			if (!failure)
 			{
-				console.log("Invalid Parameters: Aesica.Core.obtainItem(itemType=" + itemType + ", itemID=" + itemID + ", quantity?=" + quantity + ")");
-				message = message.replace(rxItemIcon, "\\I[0]").replace(rxItemName, "Invalid Item").replace(rxItemQuantity, "0") + "\n";
+				
+				AudioManager.playSe(se);
+				$gameMessage.add(message);
 			}
-			AudioManager.playSe(se);
-			$gameMessage.add(message);
+			else console.log("ObtainItemFramework:  Invalid type/quantity or itemID out of bounds. itemType:[" + itemType + "], itemID:[" + itemID + "], quantity:[" + quantity + "]");
 		}
 	}
 	
@@ -805,7 +869,7 @@ Aesica.Core.version = 1.30;
 	
 	if ($$.params.section.combatFormulas)
 	{
-		$$.damage = function(attack, multiplier=null, defense=null)
+		$$.damage = function(attack, multiplier=null, defense=null, variance=0)
 		{
 			var iReturn = 0;
 			var userStat = 0;
@@ -827,10 +891,10 @@ Aesica.Core.version = 1.30;
 			else targetStat = isNaN(defense) ? 0 : defense;
 			multiplier = isNaN(multiplier) ? 1 : multiplier;
 			iReturn = eval($$.params.damageFormula) || 0;
-			return iReturn;
+			return $$.variance(iReturn, variance);
 		}
 		
-		$$.heal = function(attack, multiplier=null, defense=null)
+		$$.heal = function(attack, multiplier=null, defense=null, variance=0)
 		{
 			var iReturn = 0;
 			var userStat = 0;
@@ -852,7 +916,7 @@ Aesica.Core.version = 1.30;
 			else targetStat = isNaN(defense) ? 0 : defense;
 			multiplier = isNaN(multiplier) ? 1 : multiplier;
 			iReturn = eval($$.params.healingFormula) || 0;
-			return iReturn;
+			return $$.variance(iReturn, variance);
 		}
 		
 		$$.variance = function(damageValue, variance)
@@ -876,48 +940,76 @@ Aesica.Core.version = 1.30;
 			if (damage < 0) iReturn *= -1;
 			return iReturn;
 		}
+		
+		Game_Action.prototype.applyCritical = function(damage)
+		{
+			var iReturn = damage * $$.params.critMultiplier;
+			var subject = this.subject();
+			var subjectData;
+			var equips, states;
+			if (subject.isActor())
+			{
+				iReturn *= +$$.getTag.call($dataClasses[subject._classId], "Critical Bonus") || 1;
+				equips = subject.equips();
+				for (i in equips)
+				{
+					if (equips[i]) iReturn *= +$$.getTag.call(equips[i], "Critical Bonus") || 1;
+				}
+				subjectData = subject.actor();
+			}
+			else subjectData = subject.enemy();
+			iReturn *= +$$.getTag.call(subjectData, "Critical Bonus") || 1;
+			iReturn *= +$$.getTag.call(this.item(), "Critical Bonus") || 1;
+			states = subject.states();
+			for (i in states)
+			{
+				iReturn *= +$$.getTag.call(states[i], "Critical Bonus") || 1;
+			}
+			console.log("Final Crit Bonus: " + iReturn);
+			return iReturn;
+		}
 			
-		Game_Battler.prototype.weaponMhp = function()
+		Game_BattlerBase.prototype.weaponMhp = function()
 		{
 			return this.weaponStat.call(this, 0);
 		}	
 
-		Game_Battler.prototype.weaponMmp = function()
+		Game_BattlerBase.prototype.weaponMmp = function()
 		{
 			return this.weaponStat.call(this, 1);
 		}	
 
-		Game_Battler.prototype.weaponAtk = function()
+		Game_BattlerBase.prototype.weaponAtk = function()
 		{
 			return this.weaponStat.call(this, 2);
 		}	
 
-		Game_Battler.prototype.weaponDef = function()
+		Game_BattlerBase.prototype.weaponDef = function()
 		{
 			return this.weaponStat.call(this, 3);
 		}	
 
-		Game_Battler.prototype.weaponMat = function()
+		Game_BattlerBase.prototype.weaponMat = function()
 		{
 			return this.weaponStat.call(this, 4);
 		}	
 
-		Game_Battler.prototype.weaponMdf = function()
+		Game_BattlerBase.prototype.weaponMdf = function()
 		{
 			return this.weaponStat.call(this, 5);
 		}	
 
-		Game_Battler.prototype.weaponAgi = function()
+		Game_BattlerBase.prototype.weaponAgi = function()
 		{
 			return this.weaponStat.call(this, 6);
 		}	
 
-		Game_Battler.prototype.weaponLuk = function()
+		Game_BattlerBase.prototype.weaponLuk = function()
 		{
 			return this.weaponStat.call(this, 7);
 		}	
 
-		Game_Battler.prototype.weaponStat = function(statId)
+		Game_BattlerBase.prototype.weaponStat = function(statId)
 		{
 			var params = ["mhp","mmp","atk","def","mat","mdf","agi","luk"];
 			var weapons, i, iLength, iReturn = 0;
@@ -943,7 +1035,7 @@ Aesica.Core.version = 1.30;
 			return iReturn;
 		}
 		
-		Game_Battler.prototype.anyStateAffected = function(...states)
+		Game_BattlerBase.prototype.anyStateAffected = function(...states)
 		{
 			var bReturn = false;
 			var i, iLength = states.length;
@@ -955,7 +1047,7 @@ Aesica.Core.version = 1.30;
 			return bReturn;
 		}
 
-		Game_Battler.prototype.allStateAffected = function(...states)
+		Game_BattlerBase.prototype.allStateAffected = function(...states)
 		{
 			var iReturn = 0;
 			var i, iLength = states.length;
@@ -965,11 +1057,52 @@ Aesica.Core.version = 1.30;
 			}
 			return iReturn == iLength;
 		}
+		
+		Game_BattlerBase.prototype.tagStat = function(tag)
+		{
+			console.log(this);
+			console.log(tag);
+			var iReturn = 0;
+			var i, iLength, list;
+			
+			if (this.isActor())
+			{
+				iReturn += +$$.getTag.call(this.actor(), tag);
+				iReturn += +$$.getTag.call($dataClasses[this.actor().classId], tag);
+				list = this.equips();
+				iLength = list.length;
+				for (i = 0; i < iLength; i++)
+				{
+					if (list[i]) iReturn += +$$.getTag.call(list[i], tag);
+				}			
+			}
+			else
+			{
+				iReturn += +$$.getTag.call(this.enemy(), tag);
+			}
+			list = this.states();
+			iLength = list.length;
+			for (i = 0; i < iLength; i++)
+			{
+				if (list[i]) iReturn += +$$.getTag.call(list[i], tag);
+			}
+			console.log(iReturn);
+			return iReturn;
+		}
 	}
 	
+	Game_Unit.prototype.smoothTarget = function(index)
+	{
+		if (index < 0) index = 0;
+		var member = this.members()[index];
+		//var oReturn = (member && member.isAlive()) ? member : this.aliveMembers()[0];
+		return member;
+	}
+	
+	
 /**-------------------------------------------------------------------	
-	Static command control - Attack, Guard, Item, Limits, and
-	Attack replacers
+	Static command control - Attack, Guard, Item, Limit Breaks,
+	Attack replacers, and Guard state bonuses
 //-------------------------------------------------------------------*/
 
 	if ($$.params.section.battleCommands)
@@ -1026,6 +1159,53 @@ Aesica.Core.version = 1.30;
 			return this._attackSkillReplaceID || 1;
 		}
 		
+		$$.Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
+		Game_Action.prototype.applyItemUserEffect = function(target)
+		{
+			$$.Game_Action_applyItemUserEffect.call(this, target);
+			if (this.isGuard()) $$.applyGuardBonusStates.call(this, target);
+		}
+		
+		$$.applyGuardBonusStates = function(target)
+		{
+			var user = this.subject();
+			var stateList = [];
+			var stateListAll = [];
+			var equips, states, x, targetParty = target.friendsUnit().members();
+			console.log(targetParty);
+			if (user.isActor())
+			{
+				if ($$.tagExists.call(user.actor(), "Guard State")) stateList = stateList.concat($$.getTag.call(user.actor(), "Guard State").split(","));
+				if ($$.tagExists.call(user.actor(), "Guard State All")) stateListAll = stateListAll.concat($$.getTag.call(user.actor(), "Guard State All").split(","));
+				if ($$.tagExists.call(user.currentClass(), "Guard State")) stateList = stateList.concat($$.getTag.call(user.currentClass(), "Guard State").split(","));
+				if ($$.tagExists.call(user.currentClass(), "Guard State All")) stateListAll = stateListAll.concat($$.getTag.call(user.currentClass(), "Guard State All").split(","));
+				equips = user.equips();
+				for (i in equips)
+				{
+					if ($$.tagExists.call(equips[i], "Guard State")) stateList = stateList.concat($$.getTag.call(equips[i], "Guard State").split(","));
+					if ($$.tagExists.call(equips[i], "Guard State All")) stateListAll = stateListAll.concat($$.getTag.call(equips[i], "Guard State All").split(","));
+				}
+			}
+			else
+			{
+			}
+			states = user.states();
+			for (i in states)
+			{
+				if ($$.tagExists.call(states[i], "Guard State")) stateList = stateList.concat($$.getTag.call(states[i], "Guard State").split(","));
+				if ($$.tagExists.call(states[i], "Guard State All")) stateListAll = stateListAll.concat($$.getTag.call(states[i], "Guard State All").split(","));
+			}
+			for (i in stateList)
+			{
+				x = +stateList[i];
+				if (x) target.addState(x);
+			}				
+			for (i in stateListAll)
+			{
+				x = +stateListAll[i];
+				if (x) for (j in targetParty) targetParty[j].addState(x);
+			}
+		}
 		
 		Window_ActorCommand.prototype.addLimitCommand = function()
 		{
@@ -1131,6 +1311,10 @@ Aesica.Core.version = 1.30;
 			}
 			return iReturn;
 		}
+		/** Resolve conflict with YEP Shop plugin */
+		Scene_Shop.prototype.sellingPrice = function()
+		{
+			return Math.floor(this._item.price * $$.params.shopSellModifier);
+		}
 	}
-
 })(Aesica.Core);
