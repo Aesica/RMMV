@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 1.40;
+Aesica.Core.version = 1.41;
 /*:
-* @plugindesc v1.40 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v1.41 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
