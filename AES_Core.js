@@ -1172,7 +1172,6 @@ Aesica.Core.version = 1.40;
 			var stateList = [];
 			var stateListAll = [];
 			var equips, states, x, targetParty = target.friendsUnit().members();
-			console.log(targetParty);
 			if (user.isActor())
 			{
 				if ($$.tagExists.call(user.actor(), "Guard State")) stateList = stateList.concat($$.getTag.call(user.actor(), "Guard State").split(","));
