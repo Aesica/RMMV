@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 1.41;
+Aesica.Core.version = 1.42;
 /*:
-* @plugindesc v1.41 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v1.42 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -169,6 +169,12 @@ Aesica.Core.version = 1.41;
 * @min 0
 * @default 3
 *
+* @param Initial TP
+* @parent Combat Formulas
+* @desc Initial TP on battle start when TP is not preserved.  Processed as an eval.  Default: Math.randomInt(25)
+* @type text
+* @default Math.randomInt(25)
+*
 * @param Universal Obtain Item
 * @desc Enable the universal "Obtain Item" functionality provided by this plugin?
 * @type boolean
@@ -214,14 +220,37 @@ Aesica.Core.version = 1.41;
 * @on Enable
 * @off Disable
 * @default true
-* @help
-* For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
 * @param Shop Sell Modifier
 * @parent Shop Patch
 * @desc Set the multiplier for an item's default selling price.  (default 0.5)
 * @type text
 * @default 0.5
+*
+* @param Bush Depth/Opacity Settings
+* @desc Enable the custom settings for bushes provided by this plugin?
+* @type boolean
+* @on Enable
+* @off Disable
+* @default true
+*
+* @param Bush Opacity
+* @parent Bush Depth/Opacity Settings
+* @desc Opacity for the character's lower half when walking through bushes (0-255). Default: 128
+* @type number
+* @min = 0
+* @max = 255
+* @default 128
+*
+* @param Bush Depth
+* @parent Bush Depth/Opacity Settings
+* @desc Height in pixels obscured by bushes.  Default: 12
+* @type number
+* @min = 0
+* @default 12
+*
+* @help
+* For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
 * Since this plugin offers so many things, the design is presented in a modular
 * format.  Disabling each section in the plugin parameters will prevent any of
@@ -271,9 +300,6 @@ Aesica.Core.version = 1.41;
 * tag can be placed on actors, classes, weapons, and states to replace the
 * attack command with another skill.
 *
-* <Guard>
-* Flags an ability as a "Guard" ability for use with the following 2 note tags.
-* 
 * <Guard State: n, n, ...n>
 * When a battler uses guard, the target (usually the user) will be affected
 * by the specified state(s).  This tag applies to actors/enemies, classes,
@@ -365,7 +391,6 @@ Aesica.Core.version = 1.41;
 * box as follows:
 * a.tagStat("psionic") - b.tagStat("psionic resist")
 * As a result, the target will take 40 (50 + 25 - 35) damage before variance
-* 
 *
 * Game_BattlerBase.prototype.anyStateAffected(1, 3, 27, ...etc)
 * Returns true if the specified battler has ANY of the listed states.  Examples:
@@ -462,8 +487,8 @@ Aesica.Core.version = 1.41;
 * ----------------------------------------------------------------------
 *
 * Plugin Command execution function
-* Pretty simple really, an easy (easier, anyway) way to execute plugin commands
-* via script calls using the exact same syntax as via events.  Examples below.
+* An easy (easier, anyway) way to execute plugin commands via script calls
+* using the exact same syntax used in events.  Examples:
 *
 * Event version:
 * Plugin Command : Butts 1 2
@@ -502,8 +527,11 @@ Aesica.Core.version = 1.41;
 *	- eventID:  event id number
 *	- switchID: Switch ID (A, B, C, D, or  beyond)
 * Setting any of these values to 0 will function as a wildcard, so:
-* Aesica.Core.selfSwitchesOff(0, 0, "B") // Sets all B self switches to false
-* Aesica.Core.selfSwitchesOff(5, 0, 0) // Sets all self switch on map 5 to false
+* Aesica.Core.selfSwitchesOff(0, 0, "D") // Sets all D self switches to false
+* Aesica.Core.selfSwitchesOff(5, 3) // Sets all self switches on the event
+*   found on map id 5 with event id 3 to false
+* Aesica.Core.selfSwitchesOff(5, 0, "D") // Sets all D switches on map 5 to false
+* Aesica.Core.selfSwitchesOff(5) // Sets all self switch on map 5 to false
 * Aesica.Core.selfSwitchesOff() // Sets ALL self switches to false
 *
 * Aesica.Core.setSelfSwitchesByTag(switchID, noteTag, newValue)
@@ -557,6 +585,9 @@ Aesica.Core.version = 1.41;
 	$$.params.maxDamage = +$$.pluginParameters["Maximum Damage"] || 0;
 	$$.params.unarmedValue = $$.pluginParameters["Unarmed Weapon Value"];
 	$$.params.critMultiplier = +$$.pluginParameters["Critical Hit Multiplier"] || 0;
+	$$.params.initialTP = String($$.pluginParameters["Initial TP"]);
+	$$.params.bushOpacity = +$$.pluginParameters["Bush Opacity"] || 0;
+	$$.params.bushDepth = +$$.pluginParameters["Bush Depth"] || 0;
 	$$.params.itemObtainText = String($$.pluginParameters["Item Obtain Message"]);
 	$$.params.itemObtainSound = String($$.pluginParameters["Item Obtain Sound"]);
 	$$.params.itemObtainVolume = +$$.pluginParameters["Item Obtain Volume"];
@@ -781,8 +812,7 @@ Aesica.Core.version = 1.41;
 	
 	$$.instantText = function()
 	{
-		if ($$.params.instantText === undefined) $$.params.instantText = false;
-		return $$.params.instantText;
+		return !!$$.params.instantText;
 	}
 
 /**-------------------------------------------------------------------	
@@ -841,6 +871,42 @@ Aesica.Core.version = 1.41;
 			else console.log("ObtainItemFramework:  Invalid type/quantity or itemID out of bounds. itemType:[" + itemType + "], itemID:[" + itemID + "], quantity:[" + quantity + "]");
 		}
 	}
+	
+	
+/**-------------------------------------------------------------------	
+	Flexible bush height/opacity
+//-------------------------------------------------------------------*/	
+	if (true)
+	{
+		Sprite_Character.prototype.createHalfBodySprites = function()
+		{
+			if (!this._upperBody)
+			{
+				this._upperBody = new Sprite();
+				this._upperBody.anchor.x = 0.5;
+				this._upperBody.anchor.y = 1;
+				this.addChild(this._upperBody);
+			}
+			if (!this._lowerBody)
+			{
+				this._lowerBody = new Sprite();
+				this._lowerBody.anchor.x = 0.5;
+				this._lowerBody.anchor.y = 1;
+				this._lowerBody.opacity = $$.params.bushOpacity;
+				this.addChild(this._lowerBody);
+			}
+		}
+		
+		Game_CharacterBase.prototype.refreshBushDepth = function()
+		{
+			if (this.isNormalPriority() && !this.isObjectCharacter() && this.isOnBush() && !this.isJumping())
+			{
+				if (!this.isMoving()) this._bushDepth = $$.params.bushDepth;
+			}
+			else this._bushDepth = 0;
+		}
+	}
+	
 	
 /**-------------------------------------------------------------------	
 	Force exit vehicle plugin command/function
@@ -1089,14 +1155,21 @@ Aesica.Core.version = 1.41;
 			console.log(iReturn);
 			return iReturn;
 		}
-	}
-	
-	Game_Unit.prototype.smoothTarget = function(index)
-	{
-		if (index < 0) index = 0;
-		var member = this.members()[index];
-		//var oReturn = (member && member.isAlive()) ? member : this.aliveMembers()[0];
-		return member;
+		
+		Game_Battler.prototype.initTp = function()
+		{
+			var tpValue;
+			try
+			{
+				tpValue = +eval($$.params.initialTP) || 0;
+			}
+			catch(e)
+			{
+				console.log("Eval error in Aesica.Core - Initial TP");
+			}
+			this.setTp(tpValue);
+		}
+		
 	}
 	
 	
