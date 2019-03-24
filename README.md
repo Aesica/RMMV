@@ -19,6 +19,7 @@ Contains several small (but useful) improvements to the basic engine, including:
 - Add states to either the user or entire party via guard with note tags on actors/enemies, classes, equips, and states
 - Damage formula functions for use in the formula box, allowing for later tweaks in 1 place instead of in every skill or item
 - Adjust the critical hit damage bonus modifier
+- Customize the starting TP in battle when TP doesn't carry over
 - Methods to access a battler's equipped weapon stats (a.weaponAtk() for example)
 - Minimum and/or maximum damage caps
 - Plugin commands to give players an item/gold, play a sound, and display a message in a unified, consistent way via plugin commands
