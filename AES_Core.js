@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 1.42;
+Aesica.Core.version = 1.43;
 /*:
-* @plugindesc v1.42 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v1.43 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -586,6 +586,7 @@ Aesica.Core.version = 1.42;
 	$$.params.unarmedValue = $$.pluginParameters["Unarmed Weapon Value"];
 	$$.params.critMultiplier = +$$.pluginParameters["Critical Hit Multiplier"] || 0;
 	$$.params.initialTP = String($$.pluginParameters["Initial TP"]);
+	$$.params.bushSettings = String($$.pluginParameters["Bush Depth/Opacity Settings"]).toLowerCase() === "false" ? false : true;
 	$$.params.bushOpacity = +$$.pluginParameters["Bush Opacity"] || 0;
 	$$.params.bushDepth = +$$.pluginParameters["Bush Depth"] || 0;
 	$$.params.itemObtainText = String($$.pluginParameters["Item Obtain Message"]);
@@ -876,7 +877,7 @@ Aesica.Core.version = 1.42;
 /**-------------------------------------------------------------------	
 	Flexible bush height/opacity
 //-------------------------------------------------------------------*/	
-	if (true)
+	if ($$.params.bushSettings)
 	{
 		Sprite_Character.prototype.createHalfBodySprites = function()
 		{
