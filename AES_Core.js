@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 1.53;
+Aesica.Core.version = 1.54;
 /*:
-* @plugindesc v1.53 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v1.54 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -754,7 +754,7 @@ Aesica.Core.version = 1.53;
 				if ($$.params.configManager.showAlwaysDash) this.addCommand(TextManager.alwaysDash, 'alwaysDash');
 				if ($$.params.configManager.showCommandRemember) this.addCommand(TextManager.commandRemember, 'commandRemember');
 			}			
-			if ($$.params.showInstantText) this.addCommand("Instant Text", "instantText");
+			if ($$.params.configManager.showInstantText) this.addCommand("Instant Text", "instantText");
 		}
 		$$.ConfigManager_makeData = ConfigManager.makeData;
 		ConfigManager.makeData = function()
