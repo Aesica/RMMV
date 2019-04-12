@@ -43,4 +43,8 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
 ### AES_RaceCore
-Info:  Adds the ability to assign races to actors and enemies, as well as modifiers vs those races, or modifiers vs attacks coming from those races.  These modifiers can be placed on actors, classes, enemies, items, skills, weapons, and armor.
+Info:  Adds races and racial modifiers to your game's battle system
+- Add races to enemies and actors
+- Damage vs racetype note tags for actors/enemies, classes, skills, equips, and states
+- Defense vs racetype note tags for actors/enemies, classes, skills, equips, and states
+- Function to retrieve the name of the target's race
