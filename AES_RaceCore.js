@@ -4,9 +4,9 @@ var Imported = Imported || {};
 Imported.AES_RaceCore = true;
 var Aesica = Aesica || {};
 Aesica.RaceCore = Aesica.RaceCore || {};
-Aesica.RaceCore.version = 1.32;
+Aesica.RaceCore.version = 1.4;
 /*:
-* @plugindesc Adds creature/player races, plus ways to deal or receive modified damage based on these races.
+* @plugindesc v1.4 Adds creature/player races, plus ways to deal or receive modified damage based on these races.
 *
 * @author Aesica
 *
@@ -258,7 +258,7 @@ Aesica.RaceCore.version = 1.32;
 		var attackMultiplier = getRacialBonus.call(this, subject, target, "attack");
 		var defenseMultiplier = getRacialBonus.call(this, target, subject, "defense");
 		var iReturn = Math.round($$.Game_Action_makeDamageValue.call(this, target, critical) * attackMultiplier * defenseMultiplier);
-		if (Imported.AES_Core) iReturn = Aesica.Core.applyDamageCap(iReturn);
+		if (Imported.AES_BattleCore) iReturn = Aesica.BattleCore.applyDamageCap(iReturn);
 		return iReturn;
 	}
 	
