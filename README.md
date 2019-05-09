@@ -1,4 +1,4 @@
-## Aesica's RMMV Plugins - Terms of Use
+# Aesica's RMMV Plugins - Terms of Use
 These terms apply to every RMMV plugin in this repo:
 - Free to use in both free and commercial projects as long as I am given credit.
 - Forked versions of these plugins are fine as long as I am given credit.
@@ -6,14 +6,14 @@ These terms apply to every RMMV plugin in this repo:
 - You may NOT remove my name from the @author section, you may NOT remove the link to this readme from the @help section, and you may NOT attempt to otherwise pass my work off as your own (come on, we all know that's a dick move, so don't be one~)
 - A copy of your game (once completed) would be nice so I can see how my scripts are being used, but it's not required.
 
-## How to Credit Me
+# How to Credit Me
 - List my name (Aesica) in your game's credits under your scripts/code section, or under "Scripting" if you don't yet have a scripting section.  Easy peasy, right? :D
 
 Unless otherwise noted or unless I missed something, these plugins should be fully compatible with the Yanfly suite.
 
-### Features and Changelog
+# Features and Changelog
 
-### AES_Core
+## AES_Core
 Info:  Contains quite a few small (but generally useful) improvements to the basic engine, including:
 - Config manager initial settings control
 - Master volume control added to settings
@@ -28,13 +28,13 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
 
-## 5/8/2019
+### 5/8/2019
 - Added plugin commands to allow for mass-removing abilities on actors, skipping abilities with the <Permanent Skill> note tag.
 - Added function to characters/events that allows their image to be set based on a specified actor ID.  So in event move sequences, this.setImageByActorId(2) will set that event's image to the second actor's walk-around sprite
 
 ----------------------------------------------------------------------------------------------------------------------
 
-### AES_BattleCore
+## AES_BattleCore
 Info: The contents of this plugin were split off from AES_Core.  Includes various battle system improvements and features:
 - A basic "Limit Break" system
 - Option to disable Attack, Guard, or Item
@@ -50,17 +50,17 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
-# 5/8/2019
+### 5/8/2019
 - Minor bugfixes
 
 ----------------------------------------------------------------------------------------------------------------------
 
-### AES_RaceCore
+## AES_RaceCore
 Info:  Adds races and racial modifiers to your game's battle system
 - Add races to enemies and actors
 - Damage vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Defense vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Function to retrieve the name of the target's race
 
-# 5/8/2019
+### 5/8/2019
 - Fixed a bug that was causing crashes in some cases
