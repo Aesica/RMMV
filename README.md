@@ -11,6 +11,8 @@ These terms apply to every RMMV plugin in this repo:
 
 Unless otherwise noted or unless I missed something, these plugins should be fully compatible with the Yanfly suite.
 
+### Features and Changelog
+
 ### AES_Core
 Info:  Contains quite a few small (but generally useful) improvements to the basic engine, including:
 - Config manager initial settings control
@@ -25,6 +27,12 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Autosaving via plugin command
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
+
+## 5/8/2019
+- Added plugin commands to allow for mass-removing abilities on actors, skipping abilities with the <Permanent Skill> note tag.
+- Added function to characters/events that allows their image to be set based on a specified actor ID.  So in event move sequences, this.setImageByActorId(2) will set that event's image to the second actor's walk-around sprite
+
+----------------------------------------------------------------------------------------------------------------------
 
 ### AES_BattleCore
 Info: The contents of this plugin were split off from AES_Core.  Includes various battle system improvements and features:
@@ -42,9 +50,17 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
+# 5/8/2019
+- Minor bugfixes
+
+----------------------------------------------------------------------------------------------------------------------
+
 ### AES_RaceCore
 Info:  Adds races and racial modifiers to your game's battle system
 - Add races to enemies and actors
 - Damage vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Defense vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Function to retrieve the name of the target's race
+
+# 5/8/2019
+- Fixed a bug that was causing crashes in some cases
