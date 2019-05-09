@@ -29,7 +29,7 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Probably some other things I'm forgetting
 
 ### 5/8/2019
-- Added plugin commands to allow for mass-removing abilities on actors, skipping abilities with the <Permanent Skill> note tag.
+- Added plugin commands to allow for mass-removing abilities on actors, skipping abilities with the \<Permanent Skill\> note tag.
 - Added function to characters/events that allows their image to be set based on a specified actor ID.  So in event move sequences, this.setImageByActorId(2) will set that event's image to the second actor's walk-around sprite
 
 ----------------------------------------------------------------------------------------------------------------------
