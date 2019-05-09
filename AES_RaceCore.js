@@ -4,9 +4,9 @@ var Imported = Imported || {};
 Imported.AES_RaceCore = true;
 var Aesica = Aesica || {};
 Aesica.RaceCore = Aesica.RaceCore || {};
-Aesica.RaceCore.version = 1.4;
+Aesica.RaceCore.version = 1.5;
 /*:
-* @plugindesc v1.4 Adds creature/player races, plus ways to deal or receive modified damage based on these races.
+* @plugindesc v1.5 Adds creature/player races, plus ways to deal or receive modified damage based on these races.
 *
 * @author Aesica
 *
@@ -95,6 +95,9 @@ Aesica.RaceCore.version = 1.4;
 * <Attack vs Aberration: 0.01> - 1% (!) damage modifier to ALL attacks made
 * against "Aberration" actors or enemies
 *
+* <Attack vs Undead: -1> - All damage (or healing) vs Undead will be inverted,
+* making for an easy solution if you want healing effects to damage undead
+*
 * ===================
 * Useful Function Calls
 * ===================
@@ -132,23 +135,19 @@ Aesica.RaceCore.version = 1.4;
 		}
 		return oReturn;
 	})($$.params.raceList);
-	
 	function trimWhiteSpace(text)
 	{
 		return text.replace(/^[ ]*/, "").replace(/[ ]*$/, "");
 	}
-	
 	function getTag(tag, note)
 	{
-		var result = note.match(RegExp("<" + tag + "[ ]*:[ ]*(.+)>", "i"));
+		var result = note.match(RegExp("<" + tag + "[ ]*:[ ]*([^>]+)>", "is"));
 		return result ? result[1] : tagExists(tag, note);
 	}
-	
 	function tagExists(tag, note)
 	{
-		return RegExp("<" + tag + ".*>", "i").test(note);
+		return RegExp("<" + tag + "(?::.*)?>", "is").test(note);
 	}
-	
 	function safeJSONParse(jsonData)
 	{
 		var oReturn;
@@ -163,13 +162,11 @@ Aesica.RaceCore.version = 1.4;
 		}
 		return oReturn;
 	}
-	
 	function getRaceNameFromID(raceID)
 	{
 		var testValue = raceID ? +raceID : 0;
 		return isNaN(testValue) ? raceID : $$.params.raceList[testValue];
 	}
-	
 	function getRacialBonus(attacker, defender, type)
 	{
 		var iReturn = 1;
@@ -207,7 +204,6 @@ Aesica.RaceCore.version = 1.4;
 		}
 		return iReturn;
 	}
-	
 	function getModifier(raceName, note, type)
 	{
 		var iReturn = 1;
@@ -222,7 +218,6 @@ Aesica.RaceCore.version = 1.4;
 		else if (tagExists("certain " + type + " vs " + raceName, note) && this.isCertainHit()) iReturn *= +getTag("certain " + type + " vs " + raceName, note);
 		return iReturn;
 	}
-	
 	$$.getRace = function(actorOrEnemy)
 	{
 		var raceID, aReturn = getTag("Race", actorOrEnemy.note);
@@ -244,13 +239,11 @@ Aesica.RaceCore.version = 1.4;
 		}
 		return aReturn;
 	}
-	
 	Game_Battler.prototype.getRace = function()
 	{
 		var target = $dataActors[this._actorId] || $dataEnemies[this._enemyId]
 		return $$.getRace(target)
 	}
-	
 	$$.Game_Action_makeDamageValue = Game_Action.prototype.makeDamageValue;
 	Game_Action.prototype.makeDamageValue = function(target, critical)
 	{
@@ -261,5 +254,4 @@ Aesica.RaceCore.version = 1.4;
 		if (Imported.AES_BattleCore) iReturn = Aesica.BattleCore.applyDamageCap(iReturn);
 		return iReturn;
 	}
-	
 })(Aesica.RaceCore);
