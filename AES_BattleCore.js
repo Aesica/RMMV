@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.0;
+Aesica.BattleCore.version = 1.1;
 /*:
-* @plugindesc v1.0 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.1 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -188,7 +188,7 @@ Aesica.BattleCore.version = 1.0;
 *
 * this.atk * 2 // Result: 28
 *
-* To reference the stat being queried, use 'stat' so if a.weaponAtk() is called,
+* To reference the stat being queried, use 'stat' so if a.weaponAtk is called,
 * the user is unarmed, and their ATK value is 14:
 *
 * stat + 5 // Result: 19
@@ -226,24 +226,24 @@ Aesica.BattleCore.version = 1.0;
 * Allows you to apply a variance to a damage or healing result, although in 
 * most cases, this is done for you via the formula box
 *
-* Game_BattlerBase.prototype.weaponMhp()
-* Game_BattlerBase.prototype.weaponMmp()
-* Game_BattlerBase.prototype.weaponAtk()
-* Game_BattlerBase.prototype.weaponDef()
-* Game_BattlerBase.prototype.weaponMat()
-* Game_BattlerBase.prototype.weaponMdf()
-* Game_BattlerBase.prototype.weaponAgi()
-* Game_BattlerBase.prototype.weaponLuk()
+* Game_BattlerBase.prototype.weaponMhp
+* Game_BattlerBase.prototype.weaponMmp
+* Game_BattlerBase.prototype.weaponAtk
+* Game_BattlerBase.prototype.weaponDef
+* Game_BattlerBase.prototype.weaponMat
+* Game_BattlerBase.prototype.weaponMdf
+* Game_BattlerBase.prototype.weaponAgi
+* Game_BattlerBase.prototype.weaponLuk
 * Retrieves the specified stat from the battler's equipped weapon (or weapons)
 * for use in formulas that only factor in weapon strength, which can be used
-* in damage formulas.  For example:  a.weaponAtk() * 5 - b.def
+* in damage formulas.  For example:  a.weaponAtk * 5 - b.def
 * If the battler is an enemy, it returns their associated base parameter 
 * instead since enemies don't use weapons
 *
 * Game_BattlerBase.prototype.weaponStat(statID)
 * Same as above, but allows the stat to be referenced by its ID.  Examples:
-* a.weaponStat(2) // same as a.weaponAtk()
-* a.weaponStat(4) // same as a.weaponMat()
+* a.weaponStat(2) // same as a.weaponAtk
+* a.weaponStat(4) // same as a.weaponMat
 *
 * Game_BattlerBase.prototype.tagStat(tag)
 * Allows the reading of extra quasi-stats set via note tags.  The following
@@ -287,7 +287,7 @@ Aesica.BattleCore.version = 1.0;
 * // uses the healing formula from the plugin parameters to combine a.mat with
 * // a multiplier of 3
 * 
-* Aesica.Core.damage(a.weaponAtk(), 10, b.def)
+* Aesica.Core.damage(a.weaponAtk, 10, b.def)
 * // Applies a's WEAPON ATK total to a multiplier of 10 and checks it against
 * // b.def
 *
@@ -471,14 +471,17 @@ Aesica.BattleCore.version = 1.0;
 			for (i in states){ iReturn *= +$$.getTag.call(states[i], "Critical Bonus") || 1; }
 			return iReturn;
 		}
-		Game_BattlerBase.prototype.weaponMhp = function(){ return this.weaponStat.call(this, 0); }
-		Game_BattlerBase.prototype.weaponMmp = function(){ return this.weaponStat.call(this, 1); }
-		Game_BattlerBase.prototype.weaponAtk = function(){ return this.weaponStat.call(this, 2); }
-		Game_BattlerBase.prototype.weaponDef = function(){ return this.weaponStat.call(this, 3); }
-		Game_BattlerBase.prototype.weaponMat = function(){ return this.weaponStat.call(this, 4); }
-		Game_BattlerBase.prototype.weaponMdf = function(){ return this.weaponStat.call(this, 5); }
-		Game_BattlerBase.prototype.weaponAgi = function(){ return this.weaponStat.call(this, 6); }
-		Game_BattlerBase.prototype.weaponLuk = function(){ return this.weaponStat.call(this, 7); }
+		Object.defineProperties(Game_BattlerBase.prototype,
+		{
+			weaponMhp: { get: function(){ return this.weaponStat(0); }, configurable: true },
+			weaponMmp: { get: function(){ return this.weaponStat(1); }, configurable: true },
+			weaponAtk: { get: function(){ return this.weaponStat(2); }, configurable: true },
+			weaponDef: { get: function(){ return this.weaponStat(3); }, configurable: true },
+			weaponMat: { get: function(){ return this.weaponStat(4); }, configurable: true },
+			weaponMdf: { get: function(){ return this.weaponStat(5); }, configurable: true },
+			weaponAgi: { get: function(){ return this.weaponStat(6); }, configurable: true },
+			weaponLuk: { get: function(){ return this.weaponStat(7); }, configurable: true },
+		});		
 		Game_BattlerBase.prototype.weaponStat = function(statId)
 		{
 			var params = ["mhp","mmp","atk","def","mat","mdf","agi","luk"];
@@ -491,6 +494,13 @@ Aesica.BattleCore.version = 1.0;
 				else for (i in weapons){ iReturn += weapons[i].params[statId]; }
 			}
 			else iReturn = stat;
+			return iReturn;
+		}
+		Game_BattlerBase.prototype.weaponTagStat = function(tag)
+		{
+			var iReturn = 0;
+			var weapons = this.weapons();
+			for (i in weapons) iReturn += +$$.getTag.call(weapons[i], tag) || 0;
 			return iReturn;
 		}
 		Game_BattlerBase.prototype.anyStateAffected = function(...states)
