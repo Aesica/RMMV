@@ -30,7 +30,8 @@ Aesica.RaceCore.version = 1.5;
 * penalties to attacks made by or against creatures of specific races.  Ever
 * want to create a Dragonslayer sword, a spell which does extra damage against
 * undead regardless of elemental affinity, or armor that reduces damage dealt
-* by demons?  Now you can!
+* by demons?  Now you can!  This can even be used to cause healing effects
+* to damage undead foes, or healing to have no effects on mechanical beings.
 *
 * ===================
 * Plugin Parameters
