@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 2.0;
+Aesica.Core.version = 2.1;
 /*:
-* @plugindesc v2.0 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v2.1 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -337,6 +337,38 @@ Aesica.Core.version = 2.0;
 *
 * ----------------------------------------------------------------------
 *
+* Mass-Forget Skills
+* This is a way to remove every skill on an actor with a single plugin command
+* Note that certain skills can be locked (and thus, not removed) using the
+* <Permanent Skill> note tag.  Here are the various ways this plugin command
+* can be used:
+*
+* ForgetSkills variable actorIdVariable removedSkillCountVariable
+* This version removes all the skills from the actor id contained in the
+* specified variable
+*
+* ForgetSkills actor actorId removedSkillCountVariable
+* This version removes all the skills from the specified actor id
+
+* ForgetSkills party removedSkillCountVariable
+* This version removes all skills from the entire party (!)
+*
+* Unless omitted, the number of skills removed will be stored in 
+* removedSkillCountVariable.  Examples of use:
+*
+* ForgetSkills party 5
+* All skills are removed and the number removed is stored in variable 5
+*
+* ForgetSkills actor 1
+* Remove all skills from actor 1, but don't bother storing the results in
+* a variable
+*
+* ForgetSkills variable 4 5
+* Remove all skills from the actor id stored in variable 4, then save the
+* number of skills removed in variable 5
+* 
+* ----------------------------------------------------------------------
+*
 * Self-Switch Manipulation
 * This is a collection of functions for reading or manipulating many self
 * switches at once.  With the exception of selfSwitchesOff, they only work for
@@ -411,6 +443,7 @@ Aesica.Core.version = 2.0;
 		else if (command === "ObtainGold" && $$.params.section.universalObtainItem) $$.obtainItem(3, 0, args[0]);
 		else if (command === "ForceExitVehicle") $$.forceExitVehicle(args);
 		else if (command === "AutoSave") $$.autoSave();
+		else if (command === "ForgetSkills") $$.forgetSkillsCommand(args);
 	}
 /**-------------------------------------------------------------------
 	ConfigManager tweaks
@@ -723,6 +756,50 @@ Aesica.Core.version = 2.0;
 			player.makeEncounterCount();
 			player.gatherFollowers();
 		}
+	}
+/**-------------------------------------------------------------------	
+	Skill mass-unlearn functions
+//-------------------------------------------------------------------*/
+	$$.forgetSkillsCommand = function(args)
+	{
+		var result = 0;
+		var party;
+		args[0] = args[0].toLowerCase();
+		args[2] = +args[2] || 0;
+		if (args[0] === "variable") result = $gameActors.actor($gameVariables.value(args[1])).forgetSkills();
+		else if (args[0] === "actor") result = $gameActors.actor(args[1]).forgetSkills();
+		else if (args[0] === "party")
+		{
+			result = 0;
+			party = $gameParty.members();
+			args[2] = +args[1] || 0;
+			for (i in party) result += party[i].forgetSkills();
+		}
+		else console.log("AES_Core: Invalid parameters in ForgetSkills plugin command");
+		if (args[2]) $gameVariables.setValue(args[2], result);
+	}
+	Game_Actor.prototype.forgetSkills = function()
+	{
+		var i, iLength = this._skills.length;
+		var counter = 0;
+		for (i = iLength - 1; i >= 0; i--)
+		{
+			if (!$$.tagExists.call($dataSkills[this._skills[i]], "permanent skill"))
+			{
+				this.forgetSkill(this._skills[i]);
+				counter++;
+			}
+		}
+		return counter;
+	}
+/**-------------------------------------------------------------------	
+	NPC/Event functions
+//-------------------------------------------------------------------*/
+	Game_CharacterBase.prototype.setImageByActorId = function(actorId)
+	{
+		var actor = $dataActors[actorId];
+		if (actor) this.setImage(actor.characterName, actor.characterIndex);
+		else this.setImage("", 0);
 	}
 /**-------------------------------------------------------------------	
 	Shop quantity owned patch - now includes equipped items
