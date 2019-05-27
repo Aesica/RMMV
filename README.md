@@ -28,6 +28,11 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
 
+**5/26/2019**
+- Added MP Aliasing functionality, enabling different classes to display MP in different ways--class specific names, gauge colors, etc.
+- MP Aliasing also updates how skill costs are displayed, similar to how YEP_SkillCore displays them.  This is due mostly to this plugin needing to overwrite YEP_SkillCore's MP display functions in order to display aliased MP correctly.
+- MP Aliasing also allows classes to hide between-round MP regen
+
 **5/8/2019**
 - Added plugin commands to allow for mass-removing abilities on actors, skipping abilities with the \<Permanent Skill\> note tag.
 - Added function to characters/events that allows their image to be set based on a specified actor ID.  So in event move sequences, this.setImageByActorId(2) will set that event's image to the second actor's walk-around sprite
