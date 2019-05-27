@@ -49,7 +49,7 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Adjust the critical hit damage bonus modifier
 - Note tags capable of further tweaking the critical hit multiplier on actors/enemies, classes, equips, and states
 - Customize the starting TP in battle when TP doesn't carry over
-- Methods to access a battler's equipped weapon stats (a.weaponAtk() for example)
+- Methods to access a battler's equipped weapon stats (a.weaponAtk for example)
 - Minimum and/or maximum damage caps
 - Additional/custom stats via note tags
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
