@@ -28,12 +28,12 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
 
-**5/26/2019**
+**5/26/2019 - 2.3**
 - Added MP Aliasing functionality, enabling different classes to display MP in different ways--class specific names, gauge colors, etc.
 - MP Aliasing also updates how skill costs are displayed, similar to how YEP_SkillCore displays them.  This is due mostly to this plugin needing to overwrite YEP_SkillCore's MP display functions in order to display aliased MP correctly.
 - MP Aliasing also allows classes to hide between-round MP regen
 
-**5/8/2019**
+**5/8/2019 - 2.1**
 - Added plugin commands to allow for mass-removing abilities on actors, skipping abilities with the \<Permanent Skill\> note tag.
 - Added function to characters/events that allows their image to be set based on a specified actor ID.  So in event move sequences, this.setImageByActorId(2) will set that event's image to the second actor's walk-around sprite
 
@@ -55,7 +55,7 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
-**5/8/2019**
+**5/8/2019 - 1.1**
 - Minor bugfixes
 
 ----------------------------------------------------------------------------------------------------------------------
@@ -67,5 +67,5 @@ Info:  Adds races and racial modifiers to your game's battle system
 - Defense vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Function to retrieve the name of the target's race
 
-**5/8/2019**
+**5/8/2019 - 1.5**
 - Fixed a bug that was causing crashes in some cases
