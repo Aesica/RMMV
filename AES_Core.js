@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 2.3;
+Aesica.Core.version = 2.4;
 /*:
-* @plugindesc v2.3 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v2.4 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -130,37 +130,6 @@ Aesica.Core.version = 2.3;
 * @type text
 * @default 
 *
-* @param MP Alias
-* @desc Enable the class-based MP aliasing provided by this plugin?
-* @type boolean
-* @on Enable
-* @off Disable
-* @default true
-*
-* @param Default MP Gauge Color 1
-* @parent MP Alias
-* @desc The default color 1 for MP gauges.  Default: 22
-* @type number
-* @default 22
-*
-* @param Default MP Gauge Color 2
-* @parent MP Alias
-* @desc The default color 2 for MP gauges.  Default: 23
-* @type number
-* @default 23
-*
-* @param Default MP Cost Color
-* @parent MP Alias
-* @desc The default color for the MP cost in skill lists:  Default 23
-* @type number
-* @default 23
-*
-* @param Skill Cost Font Size
-* @parent MP Alias
-* @desc Font size for skill costs.  Plugin Default: 20, RM Default: 28
-* @type number
-* @default 20
-*
 * @param Universal Obtain Item
 * @desc Enable the universal "Obtain Item" functionality provided by this plugin?
 * @type boolean
@@ -262,53 +231,6 @@ Aesica.Core.version = 2.3;
 * increment to something other than 20, however a multiple of 5 is recommended
 * with 10 being ideal.
 *
-* ----------------------------------------------------------------------
-*
-* MP Alias
-* Enables different classes to have different names for MP via note tags:
-* 
-* <MP Name: x>
-* Changes the abbr. term "MP" into x for a given class.
-* <MP Name: EN>
-* All instances of "MP" will show as "EN" in the combat window, main window,
-* status window, etc for any actor using a class with this note tag
-* 
-* <MP Gauge Color: color1, color2>
-* Changes the color1 and color2 of the MP gauge for a given class.  This can
-* be an indexed color based on /img/system/Window.png, or it can be a hex
-* value in #rrggbb format:
-* <MP Gauge Color: 22, 23>
-* <MP Gauge Color: #00ffff, #aaffff>
-*
-* <MP Cost Color: color>
-* Changes the color of the skill's MP cost, ideally to match the color of
-* the aliased MP gauge.  This can be either an indexed color or a hex
-* value like with the MP Gauge Color tag above:
-* <MP Cost Color: 23>
-* <MP Cost COlor: #00ffff>
-*
-* <Hide MP Regen>
-* Setting this tag on a class will prevent any between-rounds MP regen from
-* popping up any numbers.  Useful mainly for classes intended to gain decent
-* chunks of MP every round innately.  This will not prevent other sources of
-* MP recovery from showing up though, such as items and skill effects.
-*
-* The MP Alias module also improves the appearance and clarity of skill costs
-* by allowing MP and TP costs to display together for skills requiring both.
-*
-* Note on compatibility with Yanfly's Skill Core:
-*
-* This plugin overrides how Skill Core displays skill costs in the skill
-* menus.  While the two plugins do so similarly, this one does not include
-* the option to have icons by each resource type.  The other functionalities
-* of Skill Core are unaffected.
-*
-* This plugin should be placed below YEP_SkilLCore for maximum functionality,
-* although if the hp/mp/tp resource icons are preferred, placing it above
-* YEP_SkillCore will allow that plugin to render costs its way instead, however
-* skill costs will display MP and use the specified MP color regardless of 
-* any MP aliasing a given class has.
-* 
 * ----------------------------------------------------------------------
 *
 * Auto Saving
@@ -485,7 +407,6 @@ Aesica.Core.version = 2.3;
 	$$.params.section.configManager = String($$.pluginParameters["Config Manager"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.universalObtainItem = String($$.pluginParameters["Universal Obtain Item"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.shopPatch = String($$.pluginParameters["Shop Patch"]).toLowerCase() === "false" ? false : true;
-	$$.params.section.mpAlias = String($$.pluginParameters["MP Alias"]).toLowerCase() === "false" ? false : true;
 	$$.params.configManager = {};
 	$$.params.configManager.showAlwaysDash = String($$.pluginParameters["Show Always Dash"]).toLowerCase() === "false" ? false : true;
 	$$.params.configManager.alwaysDash = String($$.pluginParameters["Always Dash"]).toLowerCase() === "false" ? false : true;
@@ -510,10 +431,6 @@ Aesica.Core.version = 2.3;
 	$$.params.itemObtainVolume = +$$.pluginParameters["Item Obtain Volume"] || 0;
 	$$.params.itemCurrencyIcon = +$$.pluginParameters["Currency Icon"] || 0;
 	$$.params.autoSaveLabel = String($$.pluginParameters["Auto Save"]);
-	$$.params.mpGaugeColor1Default = +$$.pluginParameters["Default MP Gauge Color 1"] || 22;
-	$$.params.mpGaugeColor2Default = +$$.pluginParameters["Default MP Gauge Color 2"] || 23;
-	$$.params.mpCostColorDefault = +$$.pluginParameters["Default MP Cost Color"] || 23;
-	$$.params.skillCostFontSize = +$$.pluginParameters["Skill Cost Font Size"] || 18;
 	
 	$$.Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 	Game_Interpreter.prototype.pluginCommand = function(command, args)
@@ -788,88 +705,6 @@ Aesica.Core.version = 2.3;
 			else console.log("ObtainItemFramework:  Invalid type/quantity or itemID out of bounds. itemType:[" + itemType + "], itemID:[" + itemID + "], quantity:[" + quantity + "]");
 		}
 	}
-	
-/**-------------------------------------------------------------------	
-	MP Aliasing
-//-------------------------------------------------------------------*/	
-	if ($$.params.section.mpAlias)
-	{
-		Game_Actor.prototype.mpA = function(){ return Aesica.Core.getTag.call($dataClasses[this._classId], "MP Name") || TextManager.mpA; }
-		Game_Actor.prototype.mpCostColor = function(){ return Aesica.Core.getTag.call($dataClasses[this._classId], "MP Cost Color") || $$.params.mpCostColorDefault; }
-		Game_Battler.prototype.gainSilentMp = function(value){ this.setMp(this.mp + value); }
-		Game_Battler.prototype.regenerateMp = function()
-		{
-			var value = Math.floor(this.mmp * this.mrg);
-			if (value !== 0)
-			{
-				if (Aesica.Core.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(value);
-				else this.gainMp(value);
-			}
-		}
-		Window_Base.prototype.mpGaugeColor1 = function(){ return this.textColor($$.params.mpGaugeColor1Default); }
-		Window_Base.prototype.mpGaugeColor2 = function(){ return this.textColor($$.params.mpGaugeColor2Default); }
-		Window_Base.prototype.mpGaugeColor = function(index, actor)
-		{
-			var sReturn = "#ffffff";
-			var customColors = $$.getTag.call($dataClasses[actor._classId], "MP Gauge Color");
-			var color;
-			if (customColors)
-			{
-				customColors = customColors.split(",")[index];
-				if (customColors === undefined) color = this.textColor(0);
-				else color = +customColors;
-				sReturn = isNaN(color) ? customColors : this.textColor(color);
-				if (!sReturn) sReturn = "#000000";
-			}
-			else if (index == 0) sReturn = this.mpGaugeColor1();
-			else if (index == 1) sReturn = this.mpGaugeColor2();
-			return sReturn;
-		}
-		Window_Base.prototype.drawActorMp = function(actor, x, y, width)
-		{
-			width = width || 186;
-			var color1 = this.mpGaugeColor(0, actor);
-			var color2 = this.mpGaugeColor(1, actor);
-			this.drawGauge(x, y, width, actor.mpRate(), color1, color2);
-			this.changeTextColor(this.systemColor());
-			this.drawText(actor.mpA(), x, y, 44);
-			this.drawCurrentAndMax(actor.mp, actor.mmp, x, y, width,
-			this.mpColor(actor), this.normalColor());
-		}
-		Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width)
-		{
-			this.contents.fontSize = $$.params.skillCostFontSize;
-			var text, color, dw = width;
-			if (this._actor.skillTpCost(skill) > 0)
-			{
-				this.changeTextColor(this.tpCostColor());
-				text = this._actor.skillTpCost(skill) + TextManager.tpA;
-				this.drawText(text, x, y, dw, 'right');
-				dw = dw - this.textWidth(text) - 4;
-			}
-			if (this._actor.skillMpCost(skill) > 0)
-			{
-				color = this._actor.mpCostColor();
-				if (!isNaN(+color)) color = this.textColor(color);
-				this.changeTextColor(color);
-				text = this._actor.skillMpCost(skill) + this._actor.mpA();
-				this.drawText(text, x, y, dw, 'right');
-				dw = dw - this.textWidth(text) - 4;
-			}
-			if (Imported.YEP_SkillCore)
-			{
-				if (this._actor.skillHpCost(skill) > 0)
-				{
-					this.changeTextColor(this.textColor(Yanfly.Param.SCCHpTextColor));
-					text = this._actor.skillHpCost(skill) + TextManager.hpA;
-					this.drawText(text, x, y, dw, 'right');
-					dw = dw - this.textWidth(text) - 4;
-				}
-			}
-			this.resetFontSettings();
-		}
-	}
-	
 /**-------------------------------------------------------------------	
 	Flexible bush height/opacity
 //-------------------------------------------------------------------*/	
