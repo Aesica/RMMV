@@ -69,7 +69,6 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 
 ### AES_CustomMP
 Info:  Allows extra customizations for MP
-- **5/28/2019 - 1.0**
 - Allows for coloring the MP bar as well as the skill MP cost display on a per-class basis.
 - Can rename MP on a per-class basis
 - Note tags can be used to customize how HP/MP recovers (or is lost) after each battle - can also auto-revive after combat via note tags.  These tags can be placed on actors, classes, equips, and states
