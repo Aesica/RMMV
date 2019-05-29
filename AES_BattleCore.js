@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.1;
+Aesica.BattleCore.version = 1.3;
 /*:
-* @plugindesc v1.1 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.3 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -108,14 +108,6 @@ Aesica.BattleCore.version = 1.1;
 * @on Enable
 * @off Disable
 * @default true
-*
-* @param Revive Dead
-* @parent Battle End Effects
-* @desc Revive dead members after each battle?  Default: No
-* @type boolean
-* @on Yes
-* @off No
-* @default false
 *
 * @param Heal HP
 * @parent Battle End Effects
@@ -332,7 +324,6 @@ Aesica.BattleCore.version = 1.1;
 	$$.params.unarmedValue = $$.pluginParameters["Unarmed Weapon Value"];
 	$$.params.critMultiplier = +$$.pluginParameters["Critical Hit Multiplier"] || 0;
 	$$.params.initialTP = String($$.pluginParameters["Initial TP"]);
-	$$.params.battleEndRevive = String($$.pluginParameters["Revive Dead"]).toLowerCase() === "false" ? false : true;
 	$$.params.battleEndHeal = String($$.pluginParameters["Heal HP"]);
 	$$.params.battleEndRefresh = String($$.pluginParameters["Recover MP"]);
 /**-------------------------------------------------------------------	
@@ -357,6 +348,26 @@ Aesica.BattleCore.version = 1.1;
 			if (currentValue) aReturn.push(currentValue);
 		}
 		return aReturn;
+	}
+	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
+	{
+		var value = [];
+		var isActor = this.isActor();
+		var actor = isActor ? this.actor() : this.enemy();
+		var equip, state;
+		if ($$.tagExists.call(actor, tag)) value.push($$.getTag.call(actor, tag));
+		if (deepScan)
+		{
+			if (isActor)
+			{
+				if ($$.tagExists.call($dataClasses[this._classId], tag)) value.push($$.getTag.call($dataClasses[this._classId], tag));
+				equip = this.weapons().concat(this.armors());
+				for (i in equip){ if ($$.tagExists.call(equip[i], tag)) value.push($$.getTag.call(equip[i], tag)); }
+			}
+			state = this.states();
+			for (i in state){ if ($$.tagExists.call(state[i], tag)) value.push($$.getTag.call(state[i], tag)); }
+		}
+		return deepScan ? value : (value[0] ? value[0] : false);
 	}
 /**-------------------------------------------------------------------	
 	Damage/Healing formulas and Battler functions
@@ -678,22 +689,21 @@ Aesica.BattleCore.version = 1.1;
 		}
 	}
 /**-------------------------------------------------------------------	
-	Battle end effects (revive dead, heal hp/mp, etc
+	Battle end effects (heal hp/mp)
 //-------------------------------------------------------------------*/
 	if ($$.params.section.battleEndEffects)
 	{
-		Game_Party.prototype.removeBattleStates = function()
+		$$.Game_Battler_removeBattleStates = Game_Battler.prototype.removeBattleStates;
+		Game_Battler.prototype.removeBattleStates = function()
 		{
-			this.allMembers().forEach(function(actor)
+			$$.Game_Battler_removeBattleStates.call(this);
+			var actor = this;
+			if (!actor.isStateAffected(1))
 			{
-				if ($$.params.battleEndRevive) actor.removeState(1);
-				actor.removeBattleStates();
-				if (!actor.isStateAffected(1))
-				{
-					actor.gainHp(Math.floor(eval($$.params.battleEndHeal)));
-					actor.gainMp(Math.floor(eval($$.params.battleEndRefresh)));
-				}
-			});
+				actor.gainHp(Math.floor(+eval($$.params.battleEndHeal)) || 0);
+				actor.gainMp(Math.floor(+eval($$.params.battleEndRefresh)) || 0);
+			}
+			actor.refresh();
 		}
 	}
 })(Aesica.BattleCore);
