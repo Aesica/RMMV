@@ -75,6 +75,8 @@ Info:  Allows extra customizations for MP
 - Note tags can be used to customize how HP/MP recovers (or is lost) after each battle - can also auto-revive after combat via note tags.  These tags can be placed on actors, classes, equips, and states
 - Can customize what HP/MP is set to when "Recover All" is invoked
 - Improves the skill cost display to show both TP and MP for skills which cost both, similar to how YEP_SkillCore does it.
+- Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
+- Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
 
 ----------------------------------------------------------------------------------------------------------------------
 
