@@ -28,6 +28,9 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
 
+**5/28/2019 - 2.4**
+- Moved the MP Aliasing functionality into its own plugin - AES_CustomMP
+
 **5/26/2019 - 2.3**
 - Added MP Aliasing functionality, enabling different classes to display MP in different ways--class specific names, gauge colors, etc.
 - MP Aliasing also updates how skill costs are displayed, similar to how YEP_SkillCore displays them.  This is due mostly to this plugin needing to overwrite YEP_SkillCore's MP display functions in order to display aliased MP correctly.
@@ -55,8 +58,23 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
+**5/28/2019 - 1.3**
+- Removed the after-battle revive feature, as the death state can be changed to expire after combat innately
+- Optimized the after-battle HP/MP recovery functionality somewhat.
+
 **5/8/2019 - 1.1**
 - Minor bugfixes
+
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_CustomMP
+Info:  Allows extra customizations for MP
+- **5/28/2019 - 1.0**
+- Allows for coloring the MP bar as well as the skill MP cost display on a per-class basis.
+- Can rename MP on a per-class basis
+- Note tags can be used to customize how HP/MP recovers (or is lost) after each battle - can also auto-revive after combat via note tags.  These tags can be placed on actors, classes, equips, and states
+- Can customize what HP/MP is set to when "Recover All" is invoked
+- Improves the skill cost display to show both TP and MP for skills which cost both, similar to how YEP_SkillCore does it.
 
 ----------------------------------------------------------------------------------------------------------------------
 
