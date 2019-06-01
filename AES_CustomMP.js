@@ -2,7 +2,7 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.0;
+Aesica.CMP.version = 1.1;
 /*:
 * @plugindesc v1.0 Adds the ability to customize MP styling and recovery for each class
 *
@@ -44,7 +44,16 @@ Aesica.CMP.version = 1.0;
 * Changes the abbr. term "MP" into x for a given class.
 * <MP Name: EN>
 * All instances of "MP" will show as "EN" in the combat window, main window,
-* status window, etc for any actor using a class with this note tag
+* status window, etc for any actor using a class with this note tag.  The term
+* can be accessed for other uses using Game_BattlerBase.prototype.mpA (so
+* a.mpA in the combat formula box etc).
+*
+* <MP Full Name: x>
+* Allows for renaming the full term for MP into x for a given class.
+* <MP Full Name: Energy>
+* Will allow the use of Game_BattlerBase.prototype.mpName (so a.mpName in the
+* damage formula box, etc) with other functions/plugins/customizations.  Note
+* That unlike <MP Name: x>, this won't change anything
 * 
 * <MP Gauge Color: color1, color2>
 * Changes the color1 and color2 of the MP gauge for a given class.  This can
@@ -186,9 +195,30 @@ Aesica.CMP.version = 1.0;
 /**-------------------------------------------------------------------	
 	MP Aliasing functions
 //-------------------------------------------------------------------*/	
-	
-	Game_Actor.prototype.mpA = function(){ return Aesica.Core.getTag.call($dataClasses[this._classId], "MP Name") || TextManager.mpA; }
-	Game_Actor.prototype.mpCostColor = function(){ return Aesica.Core.getTag.call($dataClasses[this._classId], "MP Cost Color") || $$.params.mpCostColorDefault; }
+
+	Object.defineProperties(Game_BattlerBase.prototype,
+	{
+		mpName: { get: function()
+		{
+			var sReturn;
+			if (this.isActor()) sReturn = Aesica.Core.getTag.call($dataClasses[this._classId], "MP Full Name")
+			else sReturn = Aesica.Core.getTag.call(this.enemy(), "MP Full Name");		
+			return sReturn || TextManager.mp;
+		}, configurable: true },
+		mpA: { get: function()
+		{
+			var sReturn;
+			if (this.isActor()) sReturn = Aesica.Core.getTag.call($dataClasses[this._classId], "MP Name")
+			else sReturn = Aesica.Core.getTag.call(this.enemy(), "MP Name");		
+			return sReturn || TextManager.mpA;
+		}, configurable: true },
+	});
+	Game_BattlerBase.prototype.mpCostColor = function()
+	{
+		var sReturn;
+		if (this.isActor()) sReturn = Aesica.Core.getTag.call($dataClasses[this._classId], "MP Cost Color");
+		return sReturn || $$.params.mpCostColorDefault;
+	}
 	Game_Battler.prototype.gainSilentMp = function(value){ this.setMp(this.mp + value); }
 	Game_Battler.prototype.regenerateMp = function()
 	{
@@ -225,7 +255,7 @@ Aesica.CMP.version = 1.0;
 		var color2 = this.mpGaugeColor(1, actor);
 		this.drawGauge(x, y, width, actor.mpRate(), color1, color2);
 		this.changeTextColor(this.systemColor());
-		this.drawText(actor.mpA(), x, y, 44);
+		this.drawText(actor.mpA, x, y, 44);
 		this.drawCurrentAndMax(actor.mp, actor.mmp, x, y, width,
 		this.mpColor(actor), this.normalColor());
 	}
@@ -245,7 +275,7 @@ Aesica.CMP.version = 1.0;
 			color = this._actor.mpCostColor();
 			if (!isNaN(+color)) color = this.textColor(color);
 			this.changeTextColor(color);
-			text = this._actor.skillMpCost(skill) + this._actor.mpA();
+			text = this._actor.skillMpCost(skill) + this._actor.mpA;
 			this.drawText(text, x, y, dw, 'right');
 			dw = dw - this.textWidth(text) - 4;
 		}
@@ -260,6 +290,25 @@ Aesica.CMP.version = 1.0;
 			}
 		}
 		this.resetFontSettings();
+	}
+	Window_BattleLog.prototype.makeMpDamageText = function(target)
+	{
+		var result = target.result();
+		var damage = result.mpDamage;
+		var isActor = target.isActor();
+		var fmt;
+		if (damage > 0 && result.drain) {
+			fmt = isActor ? TextManager.actorDrain : TextManager.enemyDrain;
+			return fmt.format(target.name(), target.mpName || TextManager.mp, damage);
+		} else if (damage > 0) {
+			fmt = isActor ? TextManager.actorLoss : TextManager.enemyLoss;
+			return fmt.format(target.name(), target.mpName || TextManager.mp, damage);
+		} else if (damage < 0) {
+			fmt = isActor ? TextManager.actorRecovery : TextManager.enemyRecovery;
+			return fmt.format(target.name(), target.mpName || TextManager.mp, -damage);
+		} else {
+			return '';
+		}
 	}
 /**-------------------------------------------------------------------
 	Recovery functions
