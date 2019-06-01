@@ -77,6 +77,12 @@ Info:  Allows extra customizations for MP
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
 
+**5/8/2019 - 1.1**
+- Added support for the verbose combat messages (which most people turn off anyway, but it's there for those who want it) and the "full" term for MP, accessible by Game_BattlerBase.prototype.mpName
+- Added support for customizing enemy MP terms as well, although this is really only relevant if using verbose combat messages or plugins/features that expose enemy MP
+- Fixed a bug where Game_BattlerBase.prototype.mpA was set as as function instead of a property.  It should now work according
+to the plugin documentation.  (so a.mpA in the damage formula box)
+
 ----------------------------------------------------------------------------------------------------------------------
 
 ### AES_RaceCore
