@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.1;
+Aesica.CMP.version = 1.2;
 /*:
-* @plugindesc v1.0 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.2 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
@@ -201,22 +201,22 @@ Aesica.CMP.version = 1.1;
 		mpName: { get: function()
 		{
 			var sReturn;
-			if (this.isActor()) sReturn = Aesica.Core.getTag.call($dataClasses[this._classId], "MP Full Name")
-			else sReturn = Aesica.Core.getTag.call(this.enemy(), "MP Full Name");		
+			if (this.isActor()) sReturn = $$.getTag.call($dataClasses[this._classId], "MP Full Name")
+			else sReturn = $$.getTag.call(this.enemy(), "MP Full Name");		
 			return sReturn || TextManager.mp;
 		}, configurable: true },
 		mpA: { get: function()
 		{
 			var sReturn;
-			if (this.isActor()) sReturn = Aesica.Core.getTag.call($dataClasses[this._classId], "MP Name")
-			else sReturn = Aesica.Core.getTag.call(this.enemy(), "MP Name");		
+			if (this.isActor()) sReturn = $$.getTag.call($dataClasses[this._classId], "MP Name")
+			else sReturn = $$.getTag.call(this.enemy(), "MP Name");		
 			return sReturn || TextManager.mpA;
 		}, configurable: true },
 	});
 	Game_BattlerBase.prototype.mpCostColor = function()
 	{
 		var sReturn;
-		if (this.isActor()) sReturn = Aesica.Core.getTag.call($dataClasses[this._classId], "MP Cost Color");
+		if (this.isActor()) sReturn = $$.getTag.call($dataClasses[this._classId], "MP Cost Color");
 		return sReturn || $$.params.mpCostColorDefault;
 	}
 	Game_Battler.prototype.gainSilentMp = function(value){ this.setMp(this.mp + value); }
@@ -225,7 +225,7 @@ Aesica.CMP.version = 1.1;
 		var value = Math.floor(this.mmp * this.mrg);
 		if (value !== 0)
 		{
-			if (Aesica.Core.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(value);
+			if ($$.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(value);
 			else this.gainMp(value);
 		}
 	}
