@@ -59,6 +59,7 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
 **6/4/2019 - 1.4**
+- Added plugin parameters to customize the color/opacity of the combat log window.
 - Added a note tag for skills and items <Hide Combat Text> that can be used to suppress the initial use text from the combat log.  (Harold attacks! for example)
 
 **5/28/2019 - 1.3**
