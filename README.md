@@ -58,6 +58,9 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
+**6/4/2019 - 1.4**
+- Added a note tag for skills and items <Hide Combat Text> that can be used to suppress the initial use text from the combat log.  (Harold attacks! for example)
+
 **5/28/2019 - 1.3**
 - Removed the after-battle revive feature, as the death state can be changed to expire after combat innately
 - Optimized the after-battle HP/MP recovery functionality somewhat.
