@@ -175,6 +175,17 @@ Aesica.BattleCore.version = 1.4;
 *
 * ----------------------------------------------------------------------
 *
+* Combat Log Window
+* In addition to being able to customize the opacity and color, certain
+* skills or items can have their action text suppressed via note tag:
+*
+* <Hide Combat Text>
+* This will hide the "Harold attacks!" (or skill/item name if using 
+* YEP_BattleEngineCore) and follow-up text, if any exists.  This note tag
+* can be used on both skills and items.
+*
+* ----------------------------------------------------------------------
+*
 * Damage/Healing Formulas
 * Rather than having to manually input your damage formula into every skill
 * or item formula box, you can optionally reference these handy functions in
