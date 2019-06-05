@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.3;
+Aesica.BattleCore.version = 1.4;
 /*:
-* @plugindesc v1.3 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.4 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -101,6 +101,27 @@ Aesica.BattleCore.version = 1.3;
 * @desc Initial TP on battle start when TP is not preserved.  Processed as an eval.  Default: Math.randomInt(25)
 * @type text
 * @default Math.randomInt(25)
+*
+* @param Battle Log Tweaks
+* @desc Tweak the battle log using settings provided by this plugin?
+* @type boolean
+* @on Enable
+* @off Disable
+* @default true
+*
+* @param Battle Log Color
+* @parent Battle Log Tweaks
+* @desc Sets the color of the battle log background.  Default: #000000
+* @type string
+* @default #000000
+*
+* @param Battle Log Opacity
+* @parent Battle Log Tweaks
+* @desc Sets the opacity of the battle log background.  Default: 64
+* @type number
+* @min 0
+* @max 255
+* @default 64
 *
 * @param Battle End Effects
 * @desc Use after-battle effects provided by this plugin?
@@ -312,6 +333,7 @@ Aesica.BattleCore.version = 1.3;
 	$$.params.section.battleCommands = String($$.pluginParameters["Battle Commands"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.combatFormulas = String($$.pluginParameters["Combat Formulas"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.battleEndEffects = String($$.pluginParameters["Battle End Effects"]).toLowerCase() === "false" ? false : true;
+	$$.params.section.battleLog = String($$.pluginParameters["Battle Log Tweaks"]).toLowerCase() === "false" ? false : true;
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
 	$$.params.limitThreshold = +$$.pluginParameters["Limit Break Threshold"] || 0;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
@@ -326,6 +348,9 @@ Aesica.BattleCore.version = 1.3;
 	$$.params.initialTP = String($$.pluginParameters["Initial TP"]);
 	$$.params.battleEndHeal = String($$.pluginParameters["Heal HP"]);
 	$$.params.battleEndRefresh = String($$.pluginParameters["Recover MP"]);
+	$$.params.battleLogColor = String($$.pluginParameters["Battle Log Color"]);
+	$$.params.battleLogOpacity = +$$.pluginParameters["Battle Log Opacity"] || 64;
+	$$.params.battleLogSuppressText = String($$.pluginParameters["Suppress Text Spam"]).toLowerCase() === "false" ? false : true;
 /**-------------------------------------------------------------------	
 	Note tag parsing functions
 //-------------------------------------------------------------------*/	
@@ -686,6 +711,25 @@ Aesica.BattleCore.version = 1.3;
 		Window_ActorCommand.prototype.addLimitCommand = function()
 		{
 			this.addCommand($dataSystem.skillTypes[$$.params.limitCommand], 'skill', true, $$.params.limitCommand);
+		}
+	}
+/**-------------------------------------------------------------------	
+	Battle Log Tweaks
+//-------------------------------------------------------------------*/
+	if ($$.params.section.battleLog)
+	{
+		$$.Window_BattleLog_displayAction = Window_BattleLog.prototype.displayAction;
+		Window_BattleLog.prototype.displayAction = function(subject, item)
+		{
+			if (!$$.tagExists.call(item, "hide combat text")) $$.Window_BattleLog_displayAction.call(this, subject, item);
+		}
+		Window_BattleLog.prototype.backColor = function()
+		{
+			return $$.params.battleLogColor;
+		}
+		Window_BattleLog.prototype.backPaintOpacity = function()
+		{
+			return $$.params.battleLogOpacity;
 		}
 	}
 /**-------------------------------------------------------------------	
