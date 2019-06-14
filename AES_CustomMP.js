@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.2;
+Aesica.CMP.version = 1.3;
 /*:
-* @plugindesc v1.2 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.3 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
@@ -120,6 +120,60 @@ Aesica.CMP.version = 1.2;
 * 
 * ----------------------------------------------------------------------
 *
+* Rage-like MP gain
+*
+* Actor, enemy, class, equip, and state note tags
+* <Offensive MP Gain: x>
+* <Offensive MP Gain: x, ...filters>
+* <Defensive MP Gain: x>
+* <Defensive MP Gain: x, ...filters>
+*
+* During battle, either using skills to deal damage or receiving damage can
+* also restore X amount of MP.  Note that X is processed as an eval, so it can
+* be a fixed amount per hit, vary by damage, or whatever else.  These effects
+* are additive, so an actor that gains 5 MP per hit wearing a ring that gains
+* 15 MP per magical hit will result in 5 mp per hit and 20 per magical hit.
+*
+* The eval recognizes the following parameters:  actor, damage
+*
+* Filters (physical, magical, certain) can be added to only generate mp
+* when the matching type of attack is used.  More than one filter can be
+* applied at once. (ie, physical, magical in the same tag)
+*
+* Actor, enemy, class, equip, state, skill, and item note tag:
+* <MP Gain Modifier: X>
+* 
+* Can be added to apply a multiplier to the amount of MP restored.
+* 
+* Some sample usage:
+*
+* <Defensive MP Gain: 50 * damage / actor.mhp>
+* This is the same formula used for generating TP by default.  The amount
+* gained depends on the severity of the hit received in relation to the max
+* hp of the actor taking the damage.
+* 
+* <Offensive MP Gain: 25 * damage / actor.mhp>
+* Similar to the above, except the damage dealt by the actor generates mp
+* based on how the amount vs the actor's max hp.  Basing it on the enemy's
+* hp is generally a bad idea due to balance issues when dealing with really
+* low or really high hp foes.
+*
+* <Defensive MP Gain: 15, magical>
+* Gain 15 mp every time the actor takes magical damage
+*
+* <Defensive MP Gain: Math.randomInt(10) + 1, physical, certain>
+* Gain 1-10 mp every time the actor takes physical or certain hit damage.
+*
+* <MP Gain Modifier: 0>
+* Multiplies the result by 0, effectively preventing any mp gains.  This
+* is ideal on skills that cost MP so players don't end up abusing endless
+* positive-gain loops by spamming powerful skills.
+*
+* <MP Gain Modifier: 1.5>
+* Increases all mp gains by 50%.
+*
+* ----------------------------------------------------------------------
+*
 * Recover HP/MP/Revive after each battle
 *
 * <After Battle Revive>
@@ -146,11 +200,9 @@ Aesica.CMP.version = 1.2;
 	$$.params.mpGaugeColor2Default = +$$.pluginParameters["Default MP Gauge Color 2"] || 23;
 	$$.params.mpCostColorDefault = +$$.pluginParameters["Default MP Cost Color"] || 23;
 	$$.params.skillCostFontSize = +$$.pluginParameters["Skill Cost Font Size"] || 18;
-	
-/**-------------------------------------------------------------------	
+/**-------------------------------------------------------------------
 	Note tag parsing functions
 //-------------------------------------------------------------------*/	
-	
 	$$.getTag = function(tag)
 	{
 		var result = this.note.match(RegExp("<" + tag + "[ ]*:[ ]*([^>]+)>", "is"));
@@ -191,11 +243,9 @@ Aesica.CMP.version = 1.2;
 		}
 		return deepScan ? value : (value[0] ? value[0] : false);
 	}
-
-/**-------------------------------------------------------------------	
+/**-------------------------------------------------------------------
 	MP Aliasing functions
-//-------------------------------------------------------------------*/	
-
+//-------------------------------------------------------------------*/
 	Object.defineProperties(Game_BattlerBase.prototype,
 	{
 		mpName: { get: function()
@@ -336,4 +386,61 @@ Aesica.CMP.version = 1.2;
 			actor.refresh();
 		}
 	}
+/**-------------------------------------------------------------------
+	Action-based MP gain functions
+//-------------------------------------------------------------------*/
+	Game_Battler.prototype.chargeMpByDamage = function(damage, gainTypeTag, hitType, skillModifier=1)
+	{
+		var offensiveGainList = this.getTag(gainTypeTag, true);
+		var modifierList = this.getTag("MP Gain Modifier", true);
+		var result = 0;
+		var multiplier = 1;
+		var actor = this;
+		var hitList = ["certain", "physical", "magical"];
+		var current, formula;
+		for (i in offensiveGainList)
+		{
+			current = offensiveGainList[i].split(",");
+			formula = current.shift();
+			if (current.length === 0 || current.join(" ").search(hitList[hitType]) > -1)
+			{
+				result += +eval(formula) || 0;
+				console.log(actor.name() + " - " + gainTypeTag + ": " + result);
+			}
+		}
+		for (i in modifierList)
+		{
+			multiplier = +eval(modifierList[i]);
+			if (isNaN(multiplier)) multiplier = 1;
+			result *= multiplier;
+		}
+		result = Math.floor(result * skillModifier);
+		if (result)
+		{
+			if (this.isActor())
+			{
+				if ($$.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(result);
+				else this.gainMp(result);
+			}
+			else
+			{
+				if ($$.tagExists.call(this.enemy(), "Hide MP Regen")) this.gainSilentMp(result);
+				else this.gainMp(result);
+			}
+		}
+	}
+	$$.Game_Action_executeHpDamage = Game_Action.prototype.executeHpDamage
+	Game_Action.prototype.executeHpDamage = function(target, value)
+	{
+		$$.Game_Action_executeHpDamage.call(this, target, value);
+		var item = this.item();
+		var subject = this.subject();
+		var skillModifier = $$.tagExists.call(item, "MP Gain Modifier") ? +eval($$.getTag.call(item, "MP Gain Modifier")) : 1;
+		if (isNaN(skillModifier)) skillModifier = 1;
+		if (value > 0)
+		{
+			subject.chargeMpByDamage(value, "Offensive MP Gain", item.hitType, skillModifier);
+			target.chargeMpByDamage(value, "Defensive MP Gain", item.hitType, skillModifier);
+		}
+	}	
 })(Aesica.CMP);
