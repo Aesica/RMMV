@@ -81,8 +81,11 @@ Info:  Allows extra customizations for MP
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
 
+**6/14/2019 - 1.3**
+- Added note tags for recovering MP when dealing or receiving physical, magical, and/or certain hit damage as well as ways of applying modifiers to these effects
+
 **6/4/2019 - 1.2**
-- Fixed a bug where AES_Core was being required when it wasn't necessary.
+- Fixed a bug where AES_Core was being required when it wasn't necessary
 
 **5/8/2019 - 1.1**
 - Added support for the verbose combat messages (which most people turn off anyway, but it's there for those who want it) and the "full" term for MP, accessible by Game_BattlerBase.prototype.mpName
