@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.3;
+Aesica.CMP.version = 1.4;
 /*:
-* @plugindesc v1.3 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.4 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
@@ -30,6 +30,14 @@ Aesica.CMP.version = 1.3;
 *
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+*
+* IMPORTANT NOTE: A few note tags in this plugin allow you to use eval formulas.
+* Using greater-than (>) will close the tag, ignoring the rest of your formula. 
+* So instead of something like user.tp > 50, use 50 < user.tp which is
+* fundamentally the same thing.
+*
+* Affected note tags:  <Offensive MP Gain: x>, <Defensive MP Gain: x>, 
+* <After Battle Recover HP: x>, <After Battle Recover MP: x>
 *
 * What this plugin does:
 * 
@@ -373,7 +381,7 @@ Aesica.CMP.version = 1.3;
 	$$.Game_Battler_removeBattleStates = Game_Battler.prototype.removeBattleStates;
 	Game_Battler.prototype.removeBattleStates = function()
 	{
-		var hpFormulaList, mpFormulaList;
+		var hpFormulaList, mpFormulaList, rawEval;
 		var actor = this;
 		if (actor.isDead() && actor.getTag("After Battle Revive", true).length > 0) actor.removeState(1);
 		$$.Game_Battler_removeBattleStates.call(this);
@@ -381,8 +389,30 @@ Aesica.CMP.version = 1.3;
 		mpFormulaList = actor.getTag("After Battle Recover MP", true);
 		if (!actor.isStateAffected(1))
 		{
-			for (i in hpFormulaList) actor.gainHp(Math.floor(+eval(hpFormulaList[i])) || 0);
-			for (i in mpFormulaList) actor.gainMp(Math.floor(+eval(mpFormulaList[i])) || 0);
+			for (i in hpFormulaList)
+			{
+				try
+				{
+					rawEval = hpFormulaList[i];
+					actor.gainHp(Math.floor(+eval(rawEval)) || 0);
+				}
+				catch(e)
+				{
+					console.log("AES_CustomMP: Eval error in <After Battle Recover HP> => " + rawEval);
+				}
+			}
+			for (i in mpFormulaList)
+			{
+				try
+				{
+					rawEval = mpFormulaList[i];
+					actor.gainMp(Math.floor(+eval(rawEval)) || 0);
+				}
+				catch(e)
+				{
+					console.log("AES_CustomMP: Eval error in <After Battle Recover MP> => " + rawEval);
+				}
+			}
 			actor.refresh();
 		}
 	}
@@ -404,8 +434,14 @@ Aesica.CMP.version = 1.3;
 			formula = current.shift();
 			if (current.length === 0 || current.join(" ").search(hitList[hitType]) > -1)
 			{
-				result += +eval(formula) || 0;
-				console.log(actor.name() + " - " + gainTypeTag + ": " + result);
+				try
+				{
+					result += +eval(formula) || 0;
+				}
+				catch(e)
+				{
+					console.log("AES_CustomMP: Eval error in <" + gainTypeTag + "> => " + formula);
+				}
 			}
 		}
 		for (i in modifierList)
