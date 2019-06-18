@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.4;
+Aesica.BattleCore.version = 1.5;
 /*:
-* @plugindesc v1.4 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.5 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -102,27 +102,6 @@ Aesica.BattleCore.version = 1.4;
 * @type text
 * @default Math.randomInt(25)
 *
-* @param Battle Log Tweaks
-* @desc Tweak the battle log using settings provided by this plugin?
-* @type boolean
-* @on Enable
-* @off Disable
-* @default true
-*
-* @param Battle Log Color
-* @parent Battle Log Tweaks
-* @desc Sets the color of the battle log background.  Default: #000000
-* @type string
-* @default #000000
-*
-* @param Battle Log Opacity
-* @parent Battle Log Tweaks
-* @desc Sets the opacity of the battle log background.  Default: 64
-* @type number
-* @min 0
-* @max 255
-* @default 64
-*
 * @param Battle End Effects
 * @desc Use after-battle effects provided by this plugin?
 * @type boolean
@@ -145,6 +124,13 @@ Aesica.BattleCore.version = 1.4;
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
+* IMPORTANT NOTE: A few note tags in this plugin allow you to use eval formulas.
+* Using greater-than (>) will close the tag, ignoring the rest of your formula. 
+* So instead of something like user.tp > 50, use 50 < user.tp which is
+* fundamentally the same thing.
+*
+* Affected note tags:  <Unleash Attack: x, y>
+*
 * List of crap this plugin can do:
 *
 * ----------------------------------------------------------------------
@@ -160,29 +146,31 @@ Aesica.BattleCore.version = 1.4;
 * Note that you can put standard Attack in the limit break skillset so players
 * can still select it instead of their limit break for that particular turn.
 *
-* <Replace Attack: n>
-* Will replace the Attack command with the skill having id number n.  This note
+* <Replace Attack: x>
+* Will replace the Attack command with the skill having id number x.  This note
 * tag can be placed on actors, classes, weapons, and states to replace the
 * attack command with another skill.
 *
-* <Guard State: n, n, ...n>
+* <Unleash Attack: x, y // x2, y2 // ...etc>
+* Using a basic attack has a chance to use the specified skill.
+* x represent a skill id and y represent the chance for that skill to activate
+* instead of the normal attack skill.  This chance is a value between 0
+* (0% chance) and 1 (100% chance) and can be expressed as an eval.  The eval
+* code has acces to the user and any related stats (user.hp, etc).  Multiple
+* unleash skills can be set by separating id/chance pairs with a double-slash.
+* A few examples:
+* <Unleash Attack: 5, 0.1 // 9, 0.25>          // 10%: skill 5, 25%: skill 9
+* <Unleash Attack: 15, 1 - user.hp / user.mhp> // higher chance with lower hp
+* <Unleash Attack: 17, 50 <= user.tp>          // used if user's tp is 50+
+* <Unleash Attack: 21, user.hp < 20 ? 1 : 0>   // 100% if user hp below 20
+*
+* <Guard State: x, y, ...z>
 * When a battler uses guard, the target (usually the user) will be affected
 * by the specified state(s).  This tag applies to actors/enemies, classes,
 * equips, and states.
 *
-* <Guard State All: n, n, ...n>
+* <Guard State All: x, y, ...z>
 * Same as <Guard State> but applies the state(s) to all allies of the target.
-*
-* ----------------------------------------------------------------------
-*
-* Combat Log Window
-* In addition to being able to customize the opacity and color, certain
-* skills or items can have their action text suppressed via note tag:
-*
-* <Hide Combat Text>
-* This will hide the "Harold attacks!" (or skill/item name if using 
-* YEP_BattleEngineCore) and follow-up text, if any exists.  This note tag
-* can be used on both skills and items.
 *
 * ----------------------------------------------------------------------
 *
@@ -344,7 +332,6 @@ Aesica.BattleCore.version = 1.4;
 	$$.params.section.battleCommands = String($$.pluginParameters["Battle Commands"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.combatFormulas = String($$.pluginParameters["Combat Formulas"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.battleEndEffects = String($$.pluginParameters["Battle End Effects"]).toLowerCase() === "false" ? false : true;
-	$$.params.section.battleLog = String($$.pluginParameters["Battle Log Tweaks"]).toLowerCase() === "false" ? false : true;
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
 	$$.params.limitThreshold = +$$.pluginParameters["Limit Break Threshold"] || 0;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
@@ -359,11 +346,8 @@ Aesica.BattleCore.version = 1.4;
 	$$.params.initialTP = String($$.pluginParameters["Initial TP"]);
 	$$.params.battleEndHeal = String($$.pluginParameters["Heal HP"]);
 	$$.params.battleEndRefresh = String($$.pluginParameters["Recover MP"]);
-	$$.params.battleLogColor = String($$.pluginParameters["Battle Log Color"]);
-	$$.params.battleLogOpacity = +$$.pluginParameters["Battle Log Opacity"] || 64;
-	$$.params.battleLogSuppressText = String($$.pluginParameters["Suppress Text Spam"]).toLowerCase() === "false" ? false : true;
 /**-------------------------------------------------------------------	
-	Note tag parsing functions
+	Note tag and utility functions
 //-------------------------------------------------------------------*/	
 	$$.getTag = function(tag)
 	{
@@ -538,10 +522,17 @@ Aesica.BattleCore.version = 1.4;
 			{
 				weapons = this.weapons();
 				if (weapons.length < 1) iReturn = eval($$.params.unarmedValue);
-				else for (i in weapons){ iReturn += weapons[i].params[statId]; }
+				else
+				{
+					for (i in weapons)
+					{
+						iReturn += weapons[i].params[statId];
+						if (Imported.YEP_EquipCore) iReturn += this.evalParamPlus(weapons[i], statId);
+					}
+				}
 			}
 			else iReturn = stat;
-			return iReturn;
+			return Math.round(iReturn);
 		}
 		Game_BattlerBase.prototype.weaponTagStat = function(tag)
 		{
@@ -725,22 +716,65 @@ Aesica.BattleCore.version = 1.4;
 		}
 	}
 /**-------------------------------------------------------------------	
-	Battle Log Tweaks
+	Skill Unleash
 //-------------------------------------------------------------------*/
-	if ($$.params.section.battleLog)
+	$$.BattleManager_startAction = BattleManager.startAction;
+	BattleManager.startAction = function()
 	{
-		$$.Window_BattleLog_displayAction = Window_BattleLog.prototype.displayAction;
-		Window_BattleLog.prototype.displayAction = function(subject, item)
+		var subject = this._subject;
+		var action = subject ? subject.currentAction() : null;
+		if (action) action.attemptUnleash();
+		$$.BattleManager_startAction.call(this);
+	}
+	Game_Battler.prototype.unleashModifier = function()
+	{
+		var result = 1;
+		var modifierList = this.getTag("Unleash Modifier", true);
+		for (i in modifierList) result *= +modifierList[i] || 1;
+		return result;
+	}
+	Game_Action.prototype.attemptUnleash = function()
+	{
+		var user = this.subject();
+		var item = this.item();
+		var id, newId, unleashList, current, pair, modifier, rng, rawEval, currentId, currentEval;
+		if (user && item && this.isSkill())
 		{
-			if (!$$.tagExists.call(item, "hide combat text")) $$.Window_BattleLog_displayAction.call(this, subject, item);
-		}
-		Window_BattleLog.prototype.backColor = function()
-		{
-			return $$.params.battleLogColor;
-		}
-		Window_BattleLog.prototype.backPaintOpacity = function()
-		{
-			return $$.params.battleLogOpacity;
+			if (user && item)
+			{
+				id = newId = item.id;
+				if (id === user.attackSkillId())
+				{
+					unleashList = user.getTag("Unleash Attack", true);
+					unleashList.reverse();
+					modifier = user.unleashModifier();
+					rng = Math.random();
+					for (i in unleashList)
+					{
+						current = unleashList[i].split("//");
+						console.log(current);
+						for (j in current)
+						{
+							pair = current[j].split(",");
+							currentId = +pair.shift() || 1;
+							rawEval = pair.join(",");
+							try
+							{
+								currentEval = +eval(rawEval) || 0;
+							}
+							catch(e)
+							{
+								console.log("AES_BattleCore: Eval error in <Unleash Attack> => " + rawEval);
+								currentEval = 0;
+							}
+							newId = (rng < currentEval * modifier) ? currentId : id;
+							if (newId !== id) break;
+						}
+						if (newId !== id) break;
+					}
+					this.setSkill(newId);
+				}
+			}
 		}
 	}
 /**-------------------------------------------------------------------	
