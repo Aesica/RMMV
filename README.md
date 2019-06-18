@@ -9,7 +9,10 @@ These terms apply to every RMMV plugin in this repo:
 ## How to Credit Me
 - List my name (Aesica) in your game's credits under your scripts/code section, or under "Scripting" if you don't yet have a scripting section.  Easy peasy, right? :D
 
-Unless otherwise noted or unless I missed something, these plugins should be fully compatible with the Yanfly suite.
+## Compatibility with Yanfly's plugins
+
+For the most part, these plugins are made to be compatible, however there are a few exceptions:
+- YEP_WeaponUnleash:  Incompatible with AES_BattleCore's Battle Commands section, including the <replace attack> note tags due to both plugins needing to replace some of the same functions.
 
 ## Features and Changelog
 
