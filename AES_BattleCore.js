@@ -164,6 +164,11 @@ Aesica.BattleCore.version = 1.5;
 * <Unleash Attack: 17, 50 <= user.tp>          // used if user's tp is 50+
 * <Unleash Attack: 21, user.hp < 20 ? 1 : 0>   // 100% if user hp below 20
 *
+* <Unleash Modifier: x>
+* This is a multiplier applied to the chance for unleash attacks to trigger.
+* So <Unleash Modifier: 2> will double the chance of unleashing a special
+* attack.  This can be placed on actors/enemies, classes, equips, and states.
+*
 * <Guard State: x, y, ...z>
 * When a battler uses guard, the target (usually the user) will be affected
 * by the specified state(s).  This tag applies to actors/enemies, classes,
