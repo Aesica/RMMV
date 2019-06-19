@@ -61,6 +61,10 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
+**6/18/2019 - 1.5**
+- Added an unleash system, similar to Yanfly's.  This is mostly due to certain features of this plugin being incompatible with yanfly's unleash plugin.
+- Added support to the weaponStat functions for Yanfly's equip core and custom eval parameters.
+
 **6/4/2019 - 1.4**
 - Added plugin parameters to customize the color/opacity of the combat log window.
 - Added a note tag for skills and items <Hide Combat Text> that can be used to suppress the initial use text from the combat log.  (Harold attacks! for example)
@@ -83,6 +87,10 @@ Info:  Allows extra customizations for MP
 - Improves the skill cost display to show both TP and MP for skills which cost both, similar to how YEP_SkillCore does it.
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
+
+**6/18/2019 - 1.4**
+- Added a note about eval in note tags <After Battle Recover HP/MP> and <Offensive/Defensive MP Gain> and how using greater-than signs will close the tag prematurely.  An alternate note tag format <Note Tag>Stuff</Note Tag> will probably be introduced in the future, when I'm not feeling lazy.
+- Fixed an issue where invalid eval in these note tags was crashing the game.  Now it sends an error and dumps the offending eval to the debug console.
 
 **6/14/2019 - 1.3**
 - Added note tags for recovering MP when dealing or receiving physical, magical, and/or certain hit damage as well as ways of applying modifiers to these effects
