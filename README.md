@@ -61,6 +61,11 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 
+**6/20/2019 - 1.6**
+- Fixed a bug where <Replace Attack: x> was reading an actor's default/initial class instead of their current class
+- <Replace Attack: x> now correctly prioritizes last-to-first, meaning when multiple equips or states try to replace attack with something, the last equip or the most recently applied state will take priority
+- Made several minor, behind-the-scenes adjustments and optimizations, resulting in a slightly smaller file
+
 **6/18/2019 - 1.5**
 - Added an unleash system, similar to Yanfly's.  This is mostly due to certain features of this plugin being incompatible with yanfly's unleash plugin.
 - Added support to the weaponStat functions for Yanfly's equip core and custom eval parameters.
