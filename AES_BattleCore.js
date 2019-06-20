@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.5;
+Aesica.BattleCore.version = 1.6;
 /*:
-* @plugindesc v1.5 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.6 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -93,6 +93,7 @@ Aesica.BattleCore.version = 1.5;
 * @parent Combat Formulas
 * @desc Critical hit multiplier.  Default: 3
 * @type number
+* @decimals 2
 * @min 0
 * @default 3
 *
@@ -363,17 +364,6 @@ Aesica.BattleCore.version = 1.5;
 	{
 		return RegExp("<" + tag + "(?::.*)?>", "is").test(this.note);
 	}
-	$$.getTagFromItemArray = function(tag)
-	{
-		var aReturn = [];
-		var currentValue;
-		for (i in this)
-		{
-			currentValue = $$.getTag.call(this[i], tag);
-			if (currentValue) aReturn.push(currentValue);
-		}
-		return aReturn;
-	}
 	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 	{
 		var value = [];
@@ -449,24 +439,8 @@ Aesica.BattleCore.version = 1.5;
 		}
 		$$.gravity = function(b, magnitude)
 		{
-			var tag = "Immune to Gravity";
-			var target = b.isEnemy() ? b.enemy() : b.actor();
-			var temp;
-			var bImmune = false;
-			// actor/enemy
-			if ($$.tagExists.call(target, "immune to gravity")) bImmune = true;
-			// states
-			temp = b.states();
-			for (i in temp){ if ($$.tagExists.call(temp[i], tag)) bImmune = true; }
-			if (b.isActor() && !bImmune)
-			{
-				// equips
-				temp = b.weapons().concat(b.armors());
-				for (i in temp){ if ($$.tagExists.call(temp[i], tag)) bImmune = true; }
-				// class
-				if ($$.tagExists.call($dataClasses[b._classId], tag)) bImmune = true;
-			}
-			return bImmune ? 0 : b.hp * magnitude;
+			var isImmune = b.getTag("Immune to Gravity", true).length > 0;
+			return isImmune ? 0 : b.hp * magnitude;
 		}		
 		$$.variance = function(damageValue, variance)
 		{
@@ -491,20 +465,14 @@ Aesica.BattleCore.version = 1.5;
 		{
 			var iReturn = damage * $$.params.critMultiplier;
 			var subject = this.subject();
-			var subjectData;
-			var equips, states;
-			if (subject.isActor())
+			var current;
+			var modifiers = subject.getTag("Critical Bonus", true);
+			for (i in modifiers)
 			{
-				iReturn *= +$$.getTag.call($dataClasses[subject._classId], "Critical Bonus") || 1;
-				equips = subject.weapons().concat(subject.armors());
-				for (i in equips){ iReturn *= +$$.getTag.call(equips[i], "Critical Bonus") || 1; }
-				subjectData = subject.actor();
+				current = +modifiers[i];
+				if (isNaN(current)) current = 1;
+				iReturn *= current;
 			}
-			else subjectData = subject.enemy();
-			iReturn *= +$$.getTag.call(subjectData, "Critical Bonus") || 1;
-			iReturn *= +$$.getTag.call(this.item(), "Critical Bonus") || 1;
-			states = subject.states();
-			for (i in states){ iReturn *= +$$.getTag.call(states[i], "Critical Bonus") || 1; }
 			return iReturn;
 		}
 		Object.defineProperties(Game_BattlerBase.prototype,
@@ -564,39 +532,21 @@ Aesica.BattleCore.version = 1.5;
 		}
 		Game_BattlerBase.prototype.tagStat = function(stat)
 		{
-			var base = 0;
-			var growth = 0;
-			var bonus = 1;
-			var obj = {"base":0,"growth":0,"bonus":1};
-			var level;
-			var list;
-			if (this.isActor())
+			var statData = {"base":0,"growth":0,"bonus":1};
+			var baseList = this.getTag("Stat Base " + stat, true);
+			var growthList = this.getTag("Stat Growth " + stat, true);
+			var bonusList = this.getTag("Stat Bonus " + stat, true);
+			var bonus, level = this.isActor() ? this.level : 1;
+			for (i in baseList) statData.base += +baseList[i] || 0;
+			for (i in growthList) statData.growth += +growthList[i] || 0;
+			for (i in bonusList)
 			{
-				level = this.level;
-				// actor
-				$$.buildTagStatData.call(this.actor(), stat, obj);
-				// class
-				$$.buildTagStatData.call($dataClasses[this._classId], stat, obj);
-				// equips
-				list = this.weapons().concat(this.armors());
-				for (i in list){ $$.buildTagStatData.call(list[i], stat, obj); }
+				bonus = +bonusList[i];
+				if (isNaN(bonus)) bonus = 1;
+				statData.bonus *= bonus;
 			}
-			else
-			{
-				level = 1;
-				// enemy
-				$$.buildTagStatData.call(this.enemy(), stat, obj);
-			}
-			// states
-			list = this.states();
-			for (i in list){ $$.buildTagStatData.call(list[i], stat, obj); }
-			return Math.floor((obj.base + obj.growth * level) * obj.bonus);
-		}
-		$$.buildTagStatData = function(statName, statObj)
-		{
-			statObj.base += +$$.getTag.call(this, "Stat Base " + statName) || 0;
-			statObj.growth += +$$.getTag.call(this, "Stat Growth " + statName) || 0;
-			statObj.bonus *= $$.tagExists.call(this, "Stat Bonus " + statName) ? +$$.getTag.call(this, "Stat Bonus " + statName) : 1;
+			console.log(statData);
+			return Math.round((statData.base + statData.growth * level) * statData.bonus);
 		}
 		Game_Battler.prototype.initTp = function()
 		{
@@ -643,22 +593,14 @@ Aesica.BattleCore.version = 1.5;
 		Window_ActorCommand.prototype.addAttackCommand = function()
 		{
 			var battler = this._actor;
-			var actor, actorClass, equips, states;
 			var tagName = "Replace Attack";
-			var attackID = 1;
+			var attackId = 1;
 			if (battler)
 			{
-				actor = $dataActors[battler._actorId];
-				actorClass = $dataClasses[actor.classId];
-				equips = battler.weapons().concat(battler.armors());
-				states = battler.states();
-				attackID = Number($$.getTagFromItemArray.call(states, tagName)[0])
-				|| Number($$.getTagFromItemArray.call(equips, tagName)[0])
-				|| Number($$.getTag.call(actorClass, tagName))
-				|| Number($$.getTag.call($dataActors[battler._actorId], tagName))
-				|| 1;
-				battler._attackSkillReplaceID = attackID;
-				this.addCommand($dataSkills[attackID].name, 'attack', battler.canAttack());
+				attackId = +battler.getTag(tagName, true).reverse()[0] || 1;
+				console.log(attackId);
+				battler._attackSkillReplaceID = attackId;
+				this.addCommand($dataSkills[attackId].name, 'attack', battler.canAttack());
 			}
 			else $$.Window_ActorCommand_addAttackCommand.call(this);
 		}
@@ -670,40 +612,14 @@ Aesica.BattleCore.version = 1.5;
 		Game_Action.prototype.applyItemUserEffect = function(target)
 		{
 			$$.Game_Action_applyItemUserEffect.call(this, target);
-			if (this.isGuard()) $$.applyGuardBonusStates.call(this, target);
+			if (this.isGuard()) this.applyGuardBonusStates(target);
 		}
-		$$.applyGuardBonusStates = function(target)
+		Game_Action.prototype.applyGuardBonusStates = function(target)
 		{
 			var user = this.subject();
-			var stateId = "Guard State";
-			var stateAllId = "Guard State All";
-			var stateList = [];
-			var stateListAll = [];
-			var equips, states, x, targetParty = target.friendsUnit().members();
-			if (user.isActor())
-			{
-				if ($$.tagExists.call(user.actor(), stateId)) stateList = stateList.concat($$.getTag.call(user.actor(), stateId).split(","));
-				if ($$.tagExists.call(user.actor(), stateAllId)) stateListAll = stateListAll.concat($$.getTag.call(user.actor(), stateAllId).split(","));
-				if ($$.tagExists.call(user.currentClass(), stateId)) stateList = stateList.concat($$.getTag.call(user.currentClass(), stateId).split(","));
-				if ($$.tagExists.call(user.currentClass(), stateAllId)) stateListAll = stateListAll.concat($$.getTag.call(user.currentClass(), stateAllId).split(","));
-				equips = user.weapons().concat(user.armors());
-				for (i in equips)
-				{
-					if ($$.tagExists.call(equips[i], stateId)) stateList = stateList.concat($$.getTag.call(equips[i], stateId).split(","));
-					if ($$.tagExists.call(equips[i], stateAllId)) stateListAll = stateListAll.concat($$.getTag.call(equips[i], stateAllId).split(","));
-				}
-			}
-			else
-			{
-				if ($$.tagExists.call(user.enemy(), stateId)) stateList = stateList.concat($$.getTag.call(user.enemy(), stateId).split(","));
-				if ($$.tagExists.call(user.enemy(), stateAllId)) stateListAll = stateListAll.concat($$.getTag.call(user.enemy(), stateAllId).split(","));
-			}
-			states = user.states();
-			for (i in states)
-			{
-				if ($$.tagExists.call(states[i], stateId)) stateList = stateList.concat($$.getTag.call(states[i], stateId).split(","));
-				if ($$.tagExists.call(states[i], stateAllId)) stateListAll = stateListAll.concat($$.getTag.call(states[i], stateAllId).split(","));
-			}
+			var stateList = user.getTag("Guard State", true);
+			var stateListAll = user.getTag("Guard State All", true);
+			var x, targetParty = target.friendsUnit().members();
 			for (i in stateList)
 			{
 				x = +stateList[i];
@@ -757,7 +673,6 @@ Aesica.BattleCore.version = 1.5;
 					for (i in unleashList)
 					{
 						current = unleashList[i].split("//");
-						console.log(current);
 						for (j in current)
 						{
 							pair = current[j].split(",");
