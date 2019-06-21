@@ -2,9 +2,10 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.6;
+Aesica.BattleCore.version = 1.7;
+Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v1.6 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.7 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -125,12 +126,15 @@ Aesica.BattleCore.version = 1.6;
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
-* IMPORTANT NOTE: A few note tags in this plugin allow you to use eval formulas.
-* Using greater-than (>) will close the tag, ignoring the rest of your formula. 
-* So instead of something like user.tp > 50, use 50 < user.tp which is
-* fundamentally the same thing.
-*
-* Affected note tags:  <Unleash Attack: x, y>
+* IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible, allowing
+* for two different interchangeable formats:
+* Format 1: <Note Tag: x>
+* Format 2: <Note Tag>x</Note Tag>
+* When using eval in note tags (specifically the > sign) the second format is
+* necessary if you want to avoid closing the tag prematurely.
+* 
+* <Note>value > 5</Note>    Eval:  "value > 5" (good)
+* <Note: value > 5>			Eval:  "value "    (bad)
 *
 * List of crap this plugin can do:
 *
@@ -152,18 +156,27 @@ Aesica.BattleCore.version = 1.6;
 * tag can be placed on actors, classes, weapons, and states to replace the
 * attack command with another skill.
 *
-* <Unleash Attack: x, y // x2, y2 // ...etc>
+* <Unleash Attack: x, y>
+* <Unleash Attack>
+* x, y
+* x2, y2
+* </Unleash Attack>
 * Using a basic attack has a chance to use the specified skill.
 * x represent a skill id and y represent the chance for that skill to activate
 * instead of the normal attack skill.  This chance is a value between 0
 * (0% chance) and 1 (100% chance) and can be expressed as an eval.  The eval
 * code has acces to the user and any related stats (user.hp, etc).  Multiple
-* unleash skills can be set by separating id/chance pairs with a double-slash.
+* unleash skills can be set by separating id/chance pairs with a linebreak.
 * A few examples:
-* <Unleash Attack: 5, 0.1 // 9, 0.25>          // 10%: skill 5, 25%: skill 9
+* <Unleash Attack: 7, 0.3>                     // 30% chance to use skill 7
+* <Unleash Attack>                             // 10%: skill 5, 25%: skill 9
+* 5, 0.1                                       // skills are checked from
+* 9, 0.25                                      // first to last until
+* </Unleash Attack>                            // successful 
 * <Unleash Attack: 15, 1 - user.hp / user.mhp> // higher chance with lower hp
 * <Unleash Attack: 17, 50 <= user.tp>          // used if user's tp is 50+
 * <Unleash Attack: 21, user.hp < 20 ? 1 : 0>   // 100% if user hp below 20
+* Priority is, from lowest to highest: actor/enemy, class, equip, state
 *
 * <Unleash Modifier: x>
 * This is a multiplier applied to the chance for unleash attacks to trigger.
@@ -353,16 +366,20 @@ Aesica.BattleCore.version = 1.6;
 	$$.params.battleEndHeal = String($$.pluginParameters["Heal HP"]);
 	$$.params.battleEndRefresh = String($$.pluginParameters["Recover MP"]);
 /**-------------------------------------------------------------------	
-	Note tag and utility functions
+	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/	
-	$$.getTag = function(tag)
+	Aesica.Toolkit.getTag = function(tag)
 	{
-		var result = this.note.match(RegExp("<" + tag + "[ ]*:[ ]*([^>]+)>", "is"));
-		return result ? result[1] : $$.tagExists.call(this, tag);
+		var result;
+		var note = this.note || "";
+		if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
+		else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
+		return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
 	}
-	$$.tagExists = function(tag)
+	Aesica.Toolkit.tagExists = function(tag)
 	{
-		return RegExp("<" + tag + "(?::.*)?>", "is").test(this.note);
+		var note = this.note || "";
+		return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
 	}
 	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 	{
@@ -370,17 +387,17 @@ Aesica.BattleCore.version = 1.6;
 		var isActor = this.isActor();
 		var actor = isActor ? this.actor() : this.enemy();
 		var equip, state;
-		if ($$.tagExists.call(actor, tag)) value.push($$.getTag.call(actor, tag));
+		if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
 		if (deepScan)
 		{
 			if (isActor)
 			{
-				if ($$.tagExists.call($dataClasses[this._classId], tag)) value.push($$.getTag.call($dataClasses[this._classId], tag));
+				if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
 				equip = this.weapons().concat(this.armors());
-				for (i in equip){ if ($$.tagExists.call(equip[i], tag)) value.push($$.getTag.call(equip[i], tag)); }
+				for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
 			}
 			state = this.states();
-			for (i in state){ if ($$.tagExists.call(state[i], tag)) value.push($$.getTag.call(state[i], tag)); }
+			for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
 		}
 		return deepScan ? value : (value[0] ? value[0] : false);
 	}
@@ -511,7 +528,7 @@ Aesica.BattleCore.version = 1.6;
 		{
 			var iReturn = 0;
 			var weapons = this.weapons();
-			for (i in weapons) iReturn += +$$.getTag.call(weapons[i], tag) || 0;
+			for (i in weapons) iReturn += +Aesica.Toolkit.getTag.call(weapons[i], tag) || 0;
 			return iReturn;
 		}
 		Game_BattlerBase.prototype.anyStateAffected = function(...states)
@@ -545,7 +562,6 @@ Aesica.BattleCore.version = 1.6;
 				if (isNaN(bonus)) bonus = 1;
 				statData.bonus *= bonus;
 			}
-			console.log(statData);
 			return Math.round((statData.base + statData.growth * level) * statData.bonus);
 		}
 		Game_Battler.prototype.initTp = function()
@@ -557,7 +573,7 @@ Aesica.BattleCore.version = 1.6;
 			}
 			catch(e)
 			{
-				console.log("Eval error in Aesica.Core - Initial TP Plugin Parameter");
+				console.log("AES_BattleCore: Eval error in Initial TP Plugin Parameter");
 			}
 			this.setTp(tpValue);
 		}
@@ -598,7 +614,6 @@ Aesica.BattleCore.version = 1.6;
 			if (battler)
 			{
 				attackId = +battler.getTag(tagName, true).reverse()[0] || 1;
-				console.log(attackId);
 				battler._attackSkillReplaceID = attackId;
 				this.addCommand($dataSkills[attackId].name, 'attack', battler.canAttack());
 			}
@@ -672,7 +687,7 @@ Aesica.BattleCore.version = 1.6;
 					rng = Math.random();
 					for (i in unleashList)
 					{
-						current = unleashList[i].split("//");
+						current = unleashList[i].split(/[\r\n]+/);
 						for (j in current)
 						{
 							pair = current[j].split(",");
