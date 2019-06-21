@@ -2,9 +2,10 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.4;
+Aesica.CMP.version = 1.5;
+Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v1.4 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.5 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
@@ -209,27 +210,20 @@ Aesica.CMP.version = 1.4;
 	$$.params.mpCostColorDefault = +$$.pluginParameters["Default MP Cost Color"] || 23;
 	$$.params.skillCostFontSize = +$$.pluginParameters["Skill Cost Font Size"] || 18;
 /**-------------------------------------------------------------------
-	Note tag parsing functions
+	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/	
-	$$.getTag = function(tag)
+	Aesica.Toolkit.getTag = function(tag)
 	{
-		var result = this.note.match(RegExp("<" + tag + "[ ]*:[ ]*([^>]+)>", "is"));
-		return result ? result[1] : $$.tagExists.call(this, tag);
+		var result;
+		var note = this.note || "";
+		if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
+		else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
+		return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
 	}
-	$$.tagExists = function(tag)
+	Aesica.Toolkit.tagExists = function(tag)
 	{
-		return RegExp("<" + tag + "(?::.*)?>", "is").test(this.note);
-	}
-	$$.getTagFromItemArray = function(tag)
-	{
-		var aReturn = [];
-		var currentValue;
-		for (i in this)
-		{
-			currentValue = $$.getTag.call(this[i], tag);
-			if (currentValue) aReturn.push(currentValue);
-		}
-		return aReturn;
+		var note = this.note || "";
+		return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
 	}
 	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 	{
@@ -237,17 +231,17 @@ Aesica.CMP.version = 1.4;
 		var isActor = this.isActor();
 		var actor = isActor ? this.actor() : this.enemy();
 		var equip, state;
-		if ($$.tagExists.call(actor, tag)) value.push($$.getTag.call(actor, tag));
+		if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
 		if (deepScan)
 		{
 			if (isActor)
 			{
-				if ($$.tagExists.call($dataClasses[this._classId], tag)) value.push($$.getTag.call($dataClasses[this._classId], tag));
+				if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
 				equip = this.weapons().concat(this.armors());
-				for (i in equip){ if ($$.tagExists.call(equip[i], tag)) value.push($$.getTag.call(equip[i], tag)); }
+				for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
 			}
 			state = this.states();
-			for (i in state){ if ($$.tagExists.call(state[i], tag)) value.push($$.getTag.call(state[i], tag)); }
+			for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
 		}
 		return deepScan ? value : (value[0] ? value[0] : false);
 	}
@@ -259,22 +253,22 @@ Aesica.CMP.version = 1.4;
 		mpName: { get: function()
 		{
 			var sReturn;
-			if (this.isActor()) sReturn = $$.getTag.call($dataClasses[this._classId], "MP Full Name")
-			else sReturn = $$.getTag.call(this.enemy(), "MP Full Name");		
+			if (this.isActor()) sReturn = Aesica.Toolkit.getTag.call($dataClasses[this._classId], "MP Full Name")
+			else sReturn = Aesica.Toolkit.getTag.call(this.enemy(), "MP Full Name");		
 			return sReturn || TextManager.mp;
 		}, configurable: true },
 		mpA: { get: function()
 		{
 			var sReturn;
-			if (this.isActor()) sReturn = $$.getTag.call($dataClasses[this._classId], "MP Name")
-			else sReturn = $$.getTag.call(this.enemy(), "MP Name");		
+			if (this.isActor()) sReturn = Aesica.Toolkit.getTag.call($dataClasses[this._classId], "MP Name")
+			else sReturn = Aesica.Toolkit.getTag.call(this.enemy(), "MP Name");		
 			return sReturn || TextManager.mpA;
 		}, configurable: true },
 	});
 	Game_BattlerBase.prototype.mpCostColor = function()
 	{
 		var sReturn;
-		if (this.isActor()) sReturn = $$.getTag.call($dataClasses[this._classId], "MP Cost Color");
+		if (this.isActor()) sReturn = Aesica.Toolkit.getTag.call($dataClasses[this._classId], "MP Cost Color");
 		return sReturn || $$.params.mpCostColorDefault;
 	}
 	Game_Battler.prototype.gainSilentMp = function(value){ this.setMp(this.mp + value); }
@@ -283,7 +277,7 @@ Aesica.CMP.version = 1.4;
 		var value = Math.floor(this.mmp * this.mrg);
 		if (value !== 0)
 		{
-			if ($$.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(value);
+			if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(value);
 			else this.gainMp(value);
 		}
 	}
@@ -292,7 +286,7 @@ Aesica.CMP.version = 1.4;
 	Window_Base.prototype.mpGaugeColor = function(index, actor)
 	{
 		var sReturn = "#ffffff";
-		var customColors = $$.getTag.call($dataClasses[actor._classId], "MP Gauge Color");
+		var customColors = Aesica.Toolkit.getTag.call($dataClasses[actor._classId], "MP Gauge Color");
 		var color;
 		if (customColors)
 		{
@@ -374,8 +368,8 @@ Aesica.CMP.version = 1.4;
 	Game_BattlerBase.prototype.recoverAll = function()
 	{
 		this.clearStates();
-		this._hp = $$.tagExists.call($dataClasses[this._classId], "Recover All HP") ? Math.floor(+$$.getTag.call($dataClasses[this._classId], "Recover All HP") * this.mhp) : this.mhp;
-		this._mp = $$.tagExists.call($dataClasses[this._classId], "Recover All MP") ? Math.floor(+$$.getTag.call($dataClasses[this._classId], "Recover All MP") * this.mmp) : this.mmp;
+		this._hp = Aesica.Toolkit.tagExists.call($dataClasses[this._classId], "Recover All HP") ? Math.floor(+Aesica.Toolkit.getTag.call($dataClasses[this._classId], "Recover All HP") * this.mhp) : this.mhp;
+		this._mp = Aesica.Toolkit.tagExists.call($dataClasses[this._classId], "Recover All MP") ? Math.floor(+Aesica.Toolkit.getTag.call($dataClasses[this._classId], "Recover All MP") * this.mmp) : this.mmp;
 		this.refresh();
 	}
 	$$.Game_Battler_removeBattleStates = Game_Battler.prototype.removeBattleStates;
@@ -455,12 +449,12 @@ Aesica.CMP.version = 1.4;
 		{
 			if (this.isActor())
 			{
-				if ($$.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(result);
+				if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], "Hide MP Regen")) this.gainSilentMp(result);
 				else this.gainMp(result);
 			}
 			else
 			{
-				if ($$.tagExists.call(this.enemy(), "Hide MP Regen")) this.gainSilentMp(result);
+				if (Aesica.Toolkit.tagExists.call(this.enemy(), "Hide MP Regen")) this.gainSilentMp(result);
 				else this.gainMp(result);
 			}
 		}
@@ -471,7 +465,7 @@ Aesica.CMP.version = 1.4;
 		$$.Game_Action_executeHpDamage.call(this, target, value);
 		var item = this.item();
 		var subject = this.subject();
-		var skillModifier = $$.tagExists.call(item, "MP Gain Modifier") ? +eval($$.getTag.call(item, "MP Gain Modifier")) : 1;
+		var skillModifier = Aesica.Toolkit.tagExists.call(item, "MP Gain Modifier") ? +eval(Aesica.Toolkit.getTag.call(item, "MP Gain Modifier")) : 1;
 		if (isNaN(skillModifier)) skillModifier = 1;
 		if (value > 0)
 		{
