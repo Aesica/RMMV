@@ -2,9 +2,10 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 2.4;
+Aesica.Core.version = 2.5;
+Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v2.4 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v2.5 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -200,6 +201,16 @@ Aesica.Core.version = 2.4;
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
+* IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible, allowing
+* for two different interchangeable formats:
+* Format 1: <Note Tag: x>
+* Format 2: <Note Tag>x</Note Tag>
+* When using eval in note tags (specifically the > sign) the second format is
+* necessary if you want to avoid closing the tag prematurely.
+* 
+* <Note>value > 5</Note>    Eval:  "value > 5" (good)
+* <Note: value > 5>			Eval:  "value "    (bad)
+*
 * Since this plugin offers so many things, the design is presented in a modular
 * format.  Disabling each section in the plugin parameters will prevent any of
 * the associated components from even loading, so if you disable something
@@ -318,25 +329,6 @@ Aesica.Core.version = 2.4;
 *
 * ----------------------------------------------------------------------
 *
-* Note tag parsing functions
-* Unlike using the meta property, these are intended to function in a 
-* case-insensitive manner, so <butts>, <Butts>, and <BUTTS> would all be
-* treated as the same note tag. These are intended to be called by the object
-* (items, enemies, actors, etc) that is to be read from, so use the call
-* method as shown below:
-*
-* Aesica.Core.tagExists.call(callingObject, tagName)
-* Returns true if the tag exists, false if not
-*
-* Aesica.Core.getTag.call(callingObject, tagName)
-* Returns the contents of the tag
-*
-* Aesica.Core.getTagFromItemArray.call(callingObject, tagName)
-* Returns an array of tag contents from an array of objects, such as all
-* equipped items on an actor.
-*
-* ----------------------------------------------------------------------
-*
 * Mass-Forget Skills
 * This is a way to remove every skill on an actor with a single plugin command
 * Note that certain skills can be locked (and thus, not removed) using the
@@ -444,6 +436,42 @@ Aesica.Core.version = 2.4;
 		else if (command === "ForceExitVehicle") $$.forceExitVehicle(args);
 		else if (command === "AutoSave") $$.autoSave();
 		else if (command === "ForgetSkills") $$.forgetSkillsCommand(args);
+	}
+/**-------------------------------------------------------------------	
+	Aesica.Toolkit: Note tag parsing functions
+//-------------------------------------------------------------------*/	
+	Aesica.Toolkit.getTag = function(tag)
+	{
+		var result;
+		var note = this.note || "";
+		if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
+		else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
+		return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
+	}
+	Aesica.Toolkit.tagExists = function(tag)
+	{
+		var note = this.note || "";
+		return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
+	}
+	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
+	{
+		var value = [];
+		var isActor = this.isActor();
+		var actor = isActor ? this.actor() : this.enemy();
+		var equip, state;
+		if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
+		if (deepScan)
+		{
+			if (isActor)
+			{
+				if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
+				equip = this.weapons().concat(this.armors());
+				for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
+			}
+			state = this.states();
+			for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
+		}
+		return deepScan ? value : (value[0] ? value[0] : false);
 	}
 /**-------------------------------------------------------------------
 	ConfigManager tweaks
@@ -575,7 +603,7 @@ Aesica.Core.version = 2.4;
 		for (i in events)
 		{
 			currentEvent = events[i].event();
-			if (!tag || $$.tagExists.call(currentEvent, tag))
+			if (!tag || Aesica.Toolkit.tagExists.call(currentEvent, tag))
 			{
 				$gameSelfSwitches.setValue([mapID, events[i].eventId(), switchID], newValue);
 				oReturn.changed++;
@@ -593,7 +621,7 @@ Aesica.Core.version = 2.4;
 		for (i in events)
 		{
 			currentEvent = events[i].event();
-			if ((!tag || $$.tagExists.call(currentEvent, tag)) && $gameSelfSwitches.value([mapID, events[i].eventId(), switchID]) == value) iReturn++;
+			if ((!tag || Aesica.Toolkit.tagExists.call(currentEvent, tag)) && $gameSelfSwitches.value([mapID, events[i].eventId(), switchID]) == value) iReturn++;
 		}
 		return iReturn;
 	}
@@ -606,36 +634,13 @@ Aesica.Core.version = 2.4;
 		for (i in events)
 		{
 			currentEvent = events[i].event();
-			if ($$.tagExists.call(currentEvent, tag)) iReturn++;
+			if (Aesica.Toolkit.tagExists.call(currentEvent, tag)) iReturn++;
 		}
 		return iReturn;
 	}
 	$$.eventTag = function(tag)
 	{
-		return $$.getTag.call($gameMap.event(this._eventId).event(), tag);
-	}
-/**-------------------------------------------------------------------	
-	Note tag parsing functions
-//-------------------------------------------------------------------*/	
-	$$.getTag = function(tag)
-	{
-		var result = this.note.match(RegExp("<" + tag + "[ ]*:[ ]*([^>]+)>", "is"));
-		return result ? result[1] : $$.tagExists.call(this, tag);
-	}
-	$$.tagExists = function(tag)
-	{
-		return RegExp("<" + tag + "(?::.*)?>", "is").test(this.note);
-	}
-	$$.getTagFromItemArray = function(tag)
-	{
-		var aReturn = [];
-		var currentValue;
-		for (i in this)
-		{
-			currentValue = $$.getTag.call(this[i], tag);
-			if (currentValue) aReturn.push(currentValue);
-		}
-		return aReturn;
+		return Aesica.Toolkit.getTag.call($gameMap.event(this._eventId).event(), tag);
 	}
 /**-------------------------------------------------------------------	
 	Instant Text Rendering
@@ -702,7 +707,7 @@ Aesica.Core.version = 2.4;
 				AudioManager.playSe(se);
 				$gameMessage.add(message);
 			}
-			else console.log("ObtainItemFramework:  Invalid type/quantity or itemID out of bounds. itemType:[" + itemType + "], itemID:[" + itemID + "], quantity:[" + quantity + "]");
+			else console.log("AES_Core:  Invalid item type/quantity or itemID out of bounds. itemType:[" + itemType + "], itemID:[" + itemID + "], quantity:[" + quantity + "]");
 		}
 	}
 /**-------------------------------------------------------------------	
@@ -784,7 +789,7 @@ Aesica.Core.version = 2.4;
 		var counter = 0;
 		for (i = iLength - 1; i >= 0; i--)
 		{
-			if (!$$.tagExists.call($dataSkills[this._skills[i]], "permanent skill"))
+			if (!Aesica.Toolkit.tagExists.call($dataSkills[this._skills[i]], "permanent skill"))
 			{
 				this.forgetSkill(this._skills[i]);
 				counter++;
