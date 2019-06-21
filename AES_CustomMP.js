@@ -32,13 +32,15 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
-* IMPORTANT NOTE: A few note tags in this plugin allow you to use eval formulas.
-* Using greater-than (>) will close the tag, ignoring the rest of your formula. 
-* So instead of something like user.tp > 50, use 50 < user.tp which is
-* fundamentally the same thing.
-*
-* Affected note tags:  <Offensive MP Gain: x>, <Defensive MP Gain: x>, 
-* <After Battle Recover HP: x>, <After Battle Recover MP: x>
+* IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible,
+* allowing for two different interchangeable formats:
+* Format 1: <Note Tag: x>
+* Format 2: <Note Tag>x</Note Tag>
+* When using eval in note tags (specifically the > sign) the second format is
+* necessary if you want to avoid closing the tag prematurely.
+* 
+* <Note>value > 5</Note>    Eval:  "value > 5" (good)
+* <Note: value > 5>			Eval:  "value "    (bad)
 *
 * What this plugin does:
 * 
@@ -186,21 +188,27 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * Recover HP/MP/Revive after each battle
 *
 * <After Battle Revive>
-* Classes with this note tag can auto-revive after battles, regardless of
-* whether or not the death state is set to be removed after combat.
-
+* Actors with this note tag can auto-revive after battles with 1 HP,
+* regardless of whether or not the death state is set to be removed after
+* combat.
+*
 * <After Battle Recover HP: x>
 * <After Battle Recover MP: x>
-* For HP and MP, "x" is processed as an eval so:
+* Actors with these note tags will recover the specified amount of HP or
+* MP after every battle if they are alive.
+*
+* For both the HP and MP versions, "x" is processed as an eval so:
 * <After Battle Recover MP: actor.mmp * 0.25> 
 * will allow the actor affected by this note tag to recover 25% of his/her HP
 * after each battle.  
 * 
 * This value can also be negative to take away HP or MP
 * instead:
-* <After Battle Recover MP: -actor.mmp>
+* <After Battle Recover MP: -actor.mp>
 * will set the actor's mp to 0 after each battle.
-*/
+*
+* These note tags can be placed on actors, classes, equips, and states.
+ */
 (function($$)
 {
 	$$.pluginParameters = PluginManager.parameters("AES_CustomMP");
