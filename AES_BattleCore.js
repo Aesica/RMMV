@@ -126,8 +126,8 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 *
-* IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible, allowing
-* for two different interchangeable formats:
+* IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible,
+* allowing for two different interchangeable formats:
 * Format 1: <Note Tag: x>
 * Format 2: <Note Tag>x</Note Tag>
 * When using eval in note tags (specifically the > sign) the second format is
