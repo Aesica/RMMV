@@ -12,7 +12,7 @@ These terms apply to every RMMV plugin in this repo:
 ## Compatibility with Yanfly's plugins
 
 For the most part, these plugins are made to be compatible, however there are a few exceptions:
-- YEP_WeaponUnleash:  Incompatible with AES_BattleCore's Battle Commands section, including the <replace attack> note tags due to both plugins needing to replace some of the same functions.
+- YEP_WeaponUnleash:  Incompatible with AES_BattleCore's Battle Commands section, including the <replace attack> note tags due to both plugins needing to replace some of the same functions.  Plus it turns out both plugins use the same note tag <replace attack> so...there's that too.
 
 ## Features and Changelog
 
@@ -30,6 +30,9 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Autosaving via plugin command
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
+
+**6/20/2019 - 2.5**
+- Expanded note tag functionality to include support for both <tag: x> and <tag>x</tag> formats
 
 **5/28/2019 - 2.4**
 - Moved the MP Aliasing functionality into its own plugin - AES_CustomMP
@@ -60,6 +63,9 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Additional/custom stats via note tags
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
+
+**6/20/2019 - 1.7**
+- Expanded note tag functionality to include support for both <tag: x> and <tag>x</tag> formats
 
 **6/20/2019 - 1.6**
 - Fixed a bug where <Replace Attack: x> was reading an actor's default/initial class instead of their current class
@@ -92,6 +98,10 @@ Info:  Allows extra customizations for MP
 - Improves the skill cost display to show both TP and MP for skills which cost both, similar to how YEP_SkillCore does it.
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
+
+**6/20/2019 - 1.5**
+- Expanded note tag functionality to include support for both <tag: x> and <tag>x</tag> formats
+- Added additional information about the <After Battle ...> note tags to make them (hopefully) easier to understand
 
 **6/18/2019 - 1.4**
 - Added a note about eval in note tags <After Battle Recover HP/MP> and <Offensive/Defensive MP Gain> and how using greater-than signs will close the tag prematurely.  An alternate note tag format <Note Tag>Stuff</Note Tag> will probably be introduced in the future, when I'm not feeling lazy.
