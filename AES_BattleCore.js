@@ -2,12 +2,24 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.7;
+Aesica.BattleCore.version = 1.8;
 Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v1.7 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.8 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
+*
+* @param Improved Skill Sorting
+* @desc Enable the sorting of temporary skills (added by equips, states, etc) in with baseline skills?
+* @type boolean
+* @on Enable
+* @off Disable
+* @default false
+*
+* @param Skill Sort Property
+* @parent Improved Skill Sorting
+* @desc Skill property (id, name, etc) used to determine sort order.  Default: id
+* @default id
 *
 * @param Battle Commands
 * @desc Enable the battle command control and limit break system provided by this plugin?
@@ -365,6 +377,8 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 	$$.params.initialTP = String($$.pluginParameters["Initial TP"]);
 	$$.params.battleEndHeal = String($$.pluginParameters["Heal HP"]);
 	$$.params.battleEndRefresh = String($$.pluginParameters["Recover MP"]);
+	$$.params.improvedSkillSorting = String($$.pluginParameters["Improved Skill Sorting"]).toLowerCase() === "false" ? false : true;
+	$$.params.skillSortProperty = String($$.pluginParameters["Skill Sort Property"]);
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/	
@@ -598,7 +612,7 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 		{
 			if (this._actor)
 			{
-				if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length) this.addLimitCommand();
+				if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill()) this.addLimitCommand();
 				else if ($$.params.enableAttack) this.addAttackCommand();
 				this.addSkillCommands();
 				if ($$.params.enableGuard) this.addGuardCommand();
@@ -628,6 +642,20 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 		{
 			$$.Game_Action_applyItemUserEffect.call(this, target);
 			if (this.isGuard()) this.applyGuardBonusStates(target);
+		}
+		Game_Actor.prototype.hasLimitSkill = function()
+		{
+			var skills = this.skills();
+			var bReturn = false;
+			for (i in skills)
+			{
+				if (skills[i].stypeId == $$.params.limitCommand)
+				{
+					bReturn = true;
+					break;
+				}
+			}
+			return bReturn;
 		}
 		Game_Action.prototype.applyGuardBonusStates = function(target)
 		{
@@ -712,6 +740,22 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 			}
 		}
 	}
+/**-------------------------------------------------------------------	
+	Skill sorting
+//-------------------------------------------------------------------*/
+$$.Game_Actor_skills = Game_Actor.prototype.skills;
+Game_Actor.prototype.skills = function() {
+    var list = $$.Game_Actor_skills.call(this);
+    return $$.params.improvedSkillSorting ? list.sort($$.sortSkills) : list;
+};
+$$.sortSkills = function(a, b)
+{
+	var iReturn = 0;
+	var param = $$.params.skillSortProperty;
+	if (a[param] < b[param]) iReturn = -1;
+	else if (a[param] > b[param]) iReturn = 1;
+	return iReturn;
+}
 /**-------------------------------------------------------------------	
 	Battle end effects (heal hp/mp)
 //-------------------------------------------------------------------*/
