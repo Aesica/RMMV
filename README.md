@@ -63,6 +63,12 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Additional/custom stats via note tags
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
+- Can sort equip/state-added skills in with baseline skills and sort via various skill parameters
+
+**7/14/2019 - 1.8**
+- Fixed a problem where the Limit command was appearing for characters without any Limit skills learned. Now, it will only appear when the TP threshold is reached AND only if the character has at least one Limit skill learned.
+- Added a means to sort temporary skills (acquired from equips, states, etc) in with baseline skills.  By default, temporary skills appear after baseline skills, regardless of skill id.
+- When the improved sorting system is enabled, skills can be sorted by other crtieria besides skill id--alphabetically by name, by mp cost, alphabetically by note field, etc
 
 **6/20/2019 - 1.7**
 - Expanded note tag functionality to include support for both <tag: x> and <tag>x</tag> formats
