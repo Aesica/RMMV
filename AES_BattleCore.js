@@ -2,10 +2,10 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.8;
+Aesica.BattleCore.version = 1.9;
 Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v1.8 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.9 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -41,6 +41,14 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * @type number
 * @min 0
 * @default 100
+*
+* @param Single Skill Command Order
+* @parent Battle Commands
+* @desc Sets whether single skill commands appear before or after skill category commands (Magic, Special, etc)
+* @type boolean
+* @on Before
+* @off After
+* @default true
 *
 * @param Enable Attack
 * @parent Battle Commands
@@ -167,6 +175,17 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * Will replace the Attack command with the skill having id number x.  This note
 * tag can be placed on actors, classes, weapons, and states to replace the
 * attack command with another skill.
+*
+* <Single Skill Command: x>
+* <Single Skill Command: x, y, z, etc>
+* Adds one or more skills with the specified skill id directly to the actor
+* command list.  For example, if skill 13 is Wind Slash, which deals wind
+* damage to all foes and the following tag is placed on default Harold:
+* <Single Skill Command: 13>
+* Harold's commands will be: Attack, Wind Slash, Magic, Guard, Item
+* Note that whether these single skill commands appear before or after the
+* skill category commands (ie, Magic) can be set in the plugin parameters.
+* This tag can be placed on actors, classes, equips, and states.
 *
 * <Unleash Attack: x, y>
 * <Unleash Attack>
@@ -365,6 +384,7 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 	$$.params.section.battleEndEffects = String($$.pluginParameters["Battle End Effects"]).toLowerCase() === "false" ? false : true;
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
 	$$.params.limitThreshold = +$$.pluginParameters["Limit Break Threshold"] || 0;
+	$$.params.singleSkillCommandOrder = String($$.pluginParameters["Single Skill Command Order"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableGuard = String($$.pluginParameters["Enable Guard"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableItem = String($$.pluginParameters["Enable Item"]).toLowerCase() === "false" ? false : true;
@@ -603,10 +623,19 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 			this._actorCommandWindow = new Window_ActorCommand();
 			if ($$.params.enableAttack) this._actorCommandWindow.setHandler("attack", this.commandAttack.bind(this));
 			this._actorCommandWindow.setHandler("skill", this.commandSkill.bind(this));
+			this._actorCommandWindow.setHandler("singleSkill", this.commandSingleSkill.bind(this));
 			if ($$.params.enableGuard) this._actorCommandWindow.setHandler("guard", this.commandGuard.bind(this));
 			if ($$.params.enableItem) this._actorCommandWindow.setHandler("item", this.commandItem.bind(this));
 			this._actorCommandWindow.setHandler("cancel", this.selectPreviousCommand.bind(this));
 			this.addWindow(this._actorCommandWindow);
+		}
+		Scene_Battle.prototype.commandSingleSkill = function()
+		{
+			//BattleManager.inputtingAction().setSkill(this.subject().setSkill(this._actorCommandWindow.currentExt()));
+			var action = BattleManager.inputtingAction();
+			action.setSkill(this._actorCommandWindow.currentExt());
+			if (action.isForOpponent()) this.selectEnemySelection();
+			else this.selectActorSelection();
 		}
 		Window_ActorCommand.prototype.makeCommandList = function()
 		{
@@ -614,7 +643,16 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 			{
 				if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill()) this.addLimitCommand();
 				else if ($$.params.enableAttack) this.addAttackCommand();
-				this.addSkillCommands();
+				if ($$.params.singleSkillCommandOrder)
+				{
+					this.addSingleSkillCommands();
+					this.addSkillCommands();
+				}
+				else
+				{
+					this.addSkillCommands();
+					this.addSingleSkillCommands();
+				}
 				if ($$.params.enableGuard) this.addGuardCommand();
 				if ($$.params.enableItem) this.addItemCommand();
 			}
@@ -629,9 +667,28 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 			{
 				attackId = +battler.getTag(tagName, true).reverse()[0] || 1;
 				battler._attackSkillReplaceID = attackId;
-				this.addCommand($dataSkills[attackId].name, 'attack', battler.canAttack());
+				this.addCommand($dataSkills[attackId].name, "attack", battler.canAttack());
 			}
 			else $$.Window_ActorCommand_addAttackCommand.call(this);
+		}
+		Window_ActorCommand.prototype.addSingleSkillCommands = function()
+		{
+			var battler = this._actor;
+			var tagName = "Single Skill Command";
+			var commandList, canUse, skillId; 
+			if (battler)
+			{
+				commandList = battler.getTag(tagName, true).join(",").split(",");
+				for (i in commandList)
+				{
+					skillId = +commandList[i]
+					if (skillId)
+					{
+						canUse = battler.canUse($dataSkills[skillId]);
+						this.addCommand($dataSkills[skillId].name, "singleSkill", canUse, skillId);
+					}
+				}
+			}
 		}
 		Game_BattlerBase.prototype.attackSkillId = function()
 		{
