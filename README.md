@@ -65,6 +65,9 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 - Can sort equip/state-added skills in with baseline skills and sort via various skill parameters
 
+**7/26/2019 - 1.9**
+- Added functionality which allows one or more individual skills to be added to an actor's command window via note tags, such as FF6 Terra's Morph ability.  <Single Skill Command: x, ...etc>  Usable on actors, classes, equips, and states
+
 **7/14/2019 - 1.8**
 - Fixed a problem where the Limit command was appearing for characters without any Limit skills learned. Now, it will only appear when the TP threshold is reached AND only if the character has at least one Limit skill learned.
 - Added a means to sort temporary skills (acquired from equips, states, etc) in with baseline skills.  By default, temporary skills appear after baseline skills, regardless of skill id.
