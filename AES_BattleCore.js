@@ -2,10 +2,10 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.9;
+Aesica.BattleCore.version = 1.91;
 Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v1.9 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v1.91 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -634,8 +634,14 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 			//BattleManager.inputtingAction().setSkill(this.subject().setSkill(this._actorCommandWindow.currentExt()));
 			var action = BattleManager.inputtingAction();
 			action.setSkill(this._actorCommandWindow.currentExt());
+			if (action.needsSelection())
+			{
+				if (action.isForOpponent()) this.selectEnemySelection();
+				else this.selectActorSelection();
+			}
+			else this.selectNextCommand();
 			if (action.isForOpponent()) this.selectEnemySelection();
-			else this.selectActorSelection();
+			else if (action.isForFriend()) this.selectActorSelection();
 		}
 		Window_ActorCommand.prototype.makeCommandList = function()
 		{
