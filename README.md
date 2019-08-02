@@ -27,9 +27,12 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Execution of plugin commands via script calls using the same syntax format as a standard plugin command
 - Patch to fix the "Possessed" counter error in shops by including equipped items
 - Customize default multiplier for item sell prices
-- Autosaving via plugin command
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
+
+**8/1/2019 - 2.6**
+- Removed AutoSave functionality.  It is now its own plugin
+- Plugin commands used by this plugin are no longer case sensitive
 
 **6/20/2019 - 2.5**
 - Expanded note tag functionality to include support for both <tag: x> and <tag>x</tag> formats
@@ -64,6 +67,9 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 - Can sort equip/state-added skills in with baseline skills and sort via various skill parameters
+
+**8/1/2019 - 1.95**
+- Bugfix for single skill commands.  There was heinous fuckery afoot, but this is no longer the case.
 
 **7/26/2019 - 1.9**
 - Added functionality which allows one or more individual skills to be added to an actor's command window via note tags, such as FF6 Terra's Morph ability.  <Single Skill Command: x, ...etc>  Usable on actors, classes, equips, and states
@@ -127,6 +133,17 @@ Info:  Allows extra customizations for MP
 - Added support for customizing enemy MP terms as well, although this is really only relevant if using verbose combat messages or plugins/features that expose enemy MP
 - Fixed a bug where Game_BattlerBase.prototype.mpA was set as as function instead of a property.  It should now work according
 to the plugin documentation.  (so a.mpA in the damage formula box)
+
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_Autosave
+Info:  Adds autosaving to your game via plugin command
+- Can use the AutoSave plugin command to save automatically into slot 1
+- Can use the SaveGame plugin command to save into the last used slot
+- Can relabel the autosave slot (1) as "Auto Save"
+- Can lock slot 1 to prevent the player from manually saving data in that slot
+- Fully compatible with YEP_SaveCore--locking slot 1 will also prevent deletion
+- Can save into a specific slot using the SaveInSlot plugin command (advanced)
 
 ----------------------------------------------------------------------------------------------------------------------
 
