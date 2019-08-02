@@ -5,7 +5,7 @@ Aesica.Autosave = Aesica.Autosave || {};
 Aesica.Autosave.version = 1.0;
 Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v2.5 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v1.0 Enables autosaving in games via plugin command
 *
 * @author Aesica
 * @param Slot Name
@@ -28,36 +28,41 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 *
 * Auto Saving
 * 
-* There are two different plugin commands that can be used to autosave, based
-* on whichever best fits your game:
+* The following plugin commands can be used to save without accessing the
+* menu:
 *
-* AutoSave
+* AutoSave (recommended)
 * SaveGame
+* SaveInSlot
 *
-* The AutoSave plugin command will instantly save the game to slot 1.
-* Use the Auto Save plugin parameter to customize the name of this slot, or to
-* leave it at the default of File 1.
-*
-* The SaveGame plugin command will instantly save the game in whichever slot
-* was last accessed, so if you loaded a game from slot 3, this will save the
-* game in slot 3 without prompt.  If saving a new game for the first time, an
-* open slot will be chosen automatically if available.
-*
-* Note that SaveGame is somewhat experimental and is really only intended to
-* be used in games where you want to handle saving in a way similar to NES
-* era Dragon Quest.  If also using the AutoSave command and the player loads
-* their game from the auto save slot, then SaveGame will write into the
-* auto save slot instead of their actual save slot.
-*
-* It's up to you, the developer, to control how frequently or seldom to use
-* the autosave feature.  For best results, invoke it when the player touches
-* specific waypoints or transitions to certain areas.  If you don't want to
-* use the auto save feature, set the Auto Save plugin parameter to an empty
-* value and then, just never call the AutoSave plugin command.
-*
-* Plugin Command:
 * AutoSave
+* Saves the game in slot 1 (which can be renamed to something else more
+* fitting, like "Auto Save" in the plugin parameters.  This is the 
+* recommended method for autosaving in most games.
 *
+* SaveGame
+* Saves the game in the last-accessed slot, so if you loaded your game from
+* slot 3, or saved your game into slot 3 via the menu, this command will save
+* it in slot 3.  This command cannot be invoked in a brand new game until the
+* player has either manually saved their game into a specific slot, or until
+* you have invoked the SaveInSlot command to save to a specific slot.
+*
+* SaveInSlot n
+* Saves the game in the specified slot, where n is the slot number: 1, 2, etc.
+* The primary purpose of this is for setting an initial save slot for use with
+* the SaveGame command. (see notes below)
+*
+* Notes:
+*
+* - When creating your game, it's best to decide which autosave method you
+* want to use (AutoSave vs SaveGame) and use that method only.  Loading
+* from the autosave slot, followed by SaveGame will cause SaveGame to write
+* in slot 1, regardless of whatever slot was used prior to autosaving.
+*
+* - SaveInSlot is primarily intended for those who want to create an 
+* alternative save system, such as one similar to the NES Dragon Quest games.
+* This command is experimental and using it isn't recommended unless you know
+* what you're doing with your save system.
 */
 
 (function($$)
