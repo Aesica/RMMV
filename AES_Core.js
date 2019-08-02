@@ -2,10 +2,10 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 2.5;
+Aesica.Core.version = 2.6;
 Aesica.Toolkit = Aesica.Toolkit || {};
 /*:
-* @plugindesc v2.5 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v2.6 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -126,11 +126,6 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * @off Hide
 * @default true
 *
-* @param Auto Save
-* @desc Text displayed (instead of File n) for the autosave slot.  Leave blank for no change
-* @type text
-* @default 
-*
 * @param Universal Obtain Item
 * @desc Enable the universal "Obtain Item" functionality provided by this plugin?
 * @type boolean
@@ -225,10 +220,9 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * - Self switch manipulation
 * - Forced vehicle exit
 * - Instant Text*
-* - Auto Saving*
 *
-* The components for Instant Text and Auto Saving are always on, however they
-* can be switched off and ignored if their effects aren't wanted/needed.
+* The components for Instant Text is always on, however it can be switched
+* off and ignored if their effects aren't wanted/needed.
 *
 * List of crap this plugin can do:
 *
@@ -241,22 +235,6 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * to customize what shows and what doesn't, as well as setting the volume
 * increment to something other than 20, however a multiple of 5 is recommended
 * with 10 being ideal.
-*
-* ----------------------------------------------------------------------
-*
-* Auto Saving
-* Invoking the AutoSave plugin command will instantly save the game to slot 1.
-* Use the Auto Save plugin parameter to customize the name of this slot, or to
-* leave it at the default of File 1.
-*
-* It's up to you, the developer, to control how frequently or seldom to use
-* the autosave feature.  For best results, invoke it when the player touches
-* specific waypoints or transitions to certain areas.  If you don't want to
-* use the auto save feature, set the Auto Save plugin parameter to an empty
-* value and then, just never call the AutoSave plugin command.
-*
-* Plugin Command:
-* AutoSave
 *
 * ----------------------------------------------------------------------
 *
@@ -422,20 +400,18 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 	$$.params.itemObtainSound = String($$.pluginParameters["Item Obtain Sound"]);
 	$$.params.itemObtainVolume = +$$.pluginParameters["Item Obtain Volume"] || 0;
 	$$.params.itemCurrencyIcon = +$$.pluginParameters["Currency Icon"] || 0;
-	$$.params.autoSaveLabel = String($$.pluginParameters["Auto Save"]);
 	
 	$$.Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 	Game_Interpreter.prototype.pluginCommand = function(command, args)
 	{
 		$$.Game_Interpreter_pluginCommand.call(this, command, args);
-		if (command === "InstantText") $$.setInstantText(args[0]);
-		else if (command === "ObtainItem" && $$.params.section.universalObtainItem) $$.obtainItem(0, args[0], args[1]);
-		else if (command === "ObtainWeapon" && $$.params.section.universalObtainItem) $$.obtainItem(1, args[0], args[1]);
-		else if (command === "ObtainArmor" && $$.params.section.universalObtainItem) $$.obtainItem(2, args[0], args[1]);
-		else if (command === "ObtainGold" && $$.params.section.universalObtainItem) $$.obtainItem(3, 0, args[0]);
-		else if (command === "ForceExitVehicle") $$.forceExitVehicle(args);
-		else if (command === "AutoSave") $$.autoSave();
-		else if (command === "ForgetSkills") $$.forgetSkillsCommand(args);
+		if (command.match(/^InstantText/i)) $$.setInstantText(args[0]);
+		else if (command.match(/^ObtainItem/i) && $$.params.section.universalObtainItem) $$.obtainItem(0, args[0], args[1]);
+		else if (command.match(/^ObtainWeapon/i) && $$.params.section.universalObtainItem) $$.obtainItem(1, args[0], args[1]);
+		else if (command.match(/^ObtainArmor/i) && $$.params.section.universalObtainItem) $$.obtainItem(2, args[0], args[1]);
+		else if (command.match(/^ObtainGold/i) && $$.params.section.universalObtainItem) $$.obtainItem(3, 0, args[0]);
+		else if (command.match(/^ForceExitVehicle/i)) $$.forceExitVehicle(args);
+		else if (command.match(/^ForgetSkills/i)) $$.forgetSkillsCommand(args);
 	}
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
@@ -552,21 +528,6 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 		args = args.split(" ");
 		var command = args.shift();
 		Game_Interpreter.prototype.pluginCommand.call(Game_Interpreter, command, args);
-	}
-/**-------------------------------------------------------------------	
-	Autosave functions
-//-------------------------------------------------------------------*/
-	$$.autoSave = function()
-	{
-		$gameSystem.onBeforeSave();
-		var gameSlot = DataManager._lastAccessedId;
-		DataManager.saveGame(1);
-		DataManager._lastAccessedId = gameSlot;
-	}
-	Window_SavefileList.prototype.drawFileId = function(id, x, y)
-	{
-		if ($$.params.autoSaveLabel != "") this.drawText(id == 1 ? $$.params.autoSaveLabel : TextManager.file + " " + (+id - 1), x, y, 180);
-		else this.drawText(TextManager.file + " "  + id, x, y, 180);
 	}
 /**-------------------------------------------------------------------
 	Self-Switch manipulation & event tag counting
