@@ -138,13 +138,14 @@ to the plugin documentation.  (so a.mpA in the damage formula box)
 
 ### AES_Autosave
 Info:  Adds autosaving to your game via plugin command
-Note:  If using YEP_SaveCore, this plugin needs to be placed below it in order for slot 1 locking to work properly!
 - Can use the AutoSave plugin command to save automatically into slot 1
 - Can use the SaveGame plugin command to save into the last used slot
 - Can relabel the autosave slot (1) as "Auto Save"
 - Can lock slot 1 to prevent the player from manually saving data in that slot
 - Fully compatible with YEP_SaveCore--locking slot 1 will also prevent deletion
 - Can save into a specific slot using the SaveInSlot plugin command (advanced)
+
+Note:  If using YEP_SaveCore, this plugin needs to be placed below it in order for slot 1 locking to work properly!
 
 ----------------------------------------------------------------------------------------------------------------------
 
