@@ -2,8 +2,7 @@ var Imported = Imported || {};
 Imported.AES_Autosave = true;
 var Aesica = Aesica || {};
 Aesica.Autosave = Aesica.Autosave || {};
-Aesica.Autosave.version = 1.0;
-Aesica.Toolkit = Aesica.Toolkit || {};
+Aesica.Autosave.version = 1.1;
 /*:
 * @plugindesc v1.0 Enables autosaving in games via plugin command
 *
@@ -23,6 +22,7 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 *
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+* Support me on Patreon:  https://www.patreon.com/aesica
 *
 * ----------------------------------------------------------------------
 *
