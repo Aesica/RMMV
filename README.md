@@ -15,7 +15,7 @@ These terms apply to every RMMV plugin in this repo:
 ## Compatibility with Yanfly's plugins
 
 For the most part, these plugins are made to be compatible, however there are a few exceptions:
-- YEP_WeaponUnleash:  Incompatible with AES_BattleCore's Battle Commands section, including the <replace attack> note tags due to both plugins needing to replace some of the same functions.  Plus it turns out both plugins use the same note tag <replace attack> so...there's that too.
+- YEP_WeaponUnleash:  Incompatible with various things in AES_CommandControl.  To compensate, I've added my own version of skill unleash so that functionality isn't lost.  For the most part.
 
 ## Features and Changelog
 
