@@ -2,10 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.5;
+Aesica.CMP.version = 1.6;
 Aesica.Toolkit = Aesica.Toolkit || {};
+Aesica.Toolkit.customMpVersion = 1.0;
 /*:
-* @plugindesc v1.5 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.6 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
@@ -31,6 +32,7 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 *
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+* Support me on Patreon:  https://www.patreon.com/aesica
 *
 * IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible,
 * allowing for two different interchangeable formats:
@@ -220,38 +222,42 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 /**-------------------------------------------------------------------
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/	
-	Aesica.Toolkit.getTag = function(tag)
+	if ((Aesica.Toolkit.version || 0) < Aesica.Toolkit.customMpVersion)
 	{
-		var result;
-		var note = this.note || "";
-		if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
-		else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
-		return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
-	}
-	Aesica.Toolkit.tagExists = function(tag)
-	{
-		var note = this.note || "";
-		return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
-	}
-	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
-	{
-		var value = [];
-		var isActor = this.isActor();
-		var actor = isActor ? this.actor() : this.enemy();
-		var equip, state;
-		if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
-		if (deepScan)
+		Aesica.Toolkit.version = Aesica.Toolkit.customMpVersion;
+		Aesica.Toolkit.getTag = function(tag)
 		{
-			if (isActor)
-			{
-				if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
-				equip = this.weapons().concat(this.armors());
-				for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
-			}
-			state = this.states();
-			for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
+			var result;
+			var note = this.note || "";
+			if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
+			else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
+			return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
 		}
-		return deepScan ? value : (value[0] ? value[0] : false);
+		Aesica.Toolkit.tagExists = function(tag)
+		{
+			var note = this.note || "";
+			return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
+		}
+		Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
+		{
+			var value = [];
+			var isActor = this.isActor();
+			var actor = isActor ? this.actor() : this.enemy();
+			var equip, state;
+			if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
+			if (deepScan)
+			{
+				if (isActor)
+				{
+					if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
+					equip = this.weapons().concat(this.armors());
+					for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
+				}
+				state = this.states();
+				for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
+			}
+			return deepScan ? value : (value[0] ? value[0] : false);
+		}
 	}
 /**-------------------------------------------------------------------
 	MP Aliasing functions
