@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 2.0;
+Aesica.BattleCore.version = 2.01;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battleCoreVersion = 1.1;
 /*:
-* @plugindesc v2.0 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v2.01 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -102,6 +102,25 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * @off Disable
 * @default true
 * 
+* @param Battle Log Customization
+* @desc Enable the battle log customizations provided by this plugin?
+* @type boolean
+* @on  Enable
+* @off Disable
+* @default true
+*
+* @param Battle Log BG Color
+* @parent Battle Log Customization 
+* @desc Customize the color of the battle log window: #RRGGBB
+* @type text
+* @default #000000
+*
+* @param Battle Log BG Opacity
+* @parent Battle Log Customization 
+* @desc Customize the color of the battle log window: 0-255
+* @type number
+* @default 64
+*
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 * Support me on Patreon:  https://www.patreon.com/aesica
@@ -382,6 +401,7 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 	$$.params.section = {};
 	$$.params.section.combatFormulas = String($$.pluginParameters["Combat Formulas"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.battleEndEffects = String($$.pluginParameters["Battle End Effects"]).toLowerCase() === "false" ? false : true;
+	$$.params.section.battleLogCustomization = String($$.pluginParameters["Battle Log Customization"]).toLowerCase() === "false" ? false : true;
 	$$.params.damageFormula = String($$.pluginParameters["Damage Formula"]);
 	$$.params.healingFormula = String($$.pluginParameters["Healing Formula"]);
 	$$.params.minDamage = +$$.pluginParameters["Minimum Damage"] || 0;
@@ -395,6 +415,8 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 	$$.params.skillSortProperty = String($$.pluginParameters["Skill Sort Property"]);
 	$$.params.extraDeathStates = (function(s){ return s.replace(/ /g, "") == "" ? [] : s.split(",").map(x => +x || 1); })(String($$.pluginParameters["Extra Death States"]));
 	$$.params.autoApplyZoneEffects = String($$.pluginParameters["Auto-Apply Zone Effects"]).toLowerCase() === "false" ? false : true;
+	$$.params.battleLogBackgroundColor = String($$.pluginParameters["Battle Log BG Color"]);
+	$$.params.battleLogBackgroundOpacity = +String($$.pluginParameters["Battle Log BG Opacity"]);
 	
 	$$.Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 	Game_Interpreter.prototype.pluginCommand = function(command, args)	
@@ -700,6 +722,16 @@ $$.sortSkills = function(a, b)
 	{
 		var bReturn = $$.Game_Party_isAllDead.call(this);
 		return bReturn || this.numAnyStateAffected($$.params.extraDeathStates) == this.aliveMembers().length;
+	}
+/**-------------------------------------------------------------------	
+	Battle Log Adjustments
+//-------------------------------------------------------------------*/
+	if ($$.params.section.battleLogCustomization)
+	{
+		Window_BattleLog.prototype.backColor = function(){ return $$.params.battleLogBackgroundColor; }
+		Window_BattleLog.prototype.backPaintOpacity = function() { return $$.params.battleLogBackgroundOpacity; }
+		$$.Window_BattleLog_displayAction = Window_BattleLog.prototype.displayAction;
+		Window_BattleLog.prototype.displayAction = function(subject, item){ if (!Aesica.Toolkit.tagExists.call(item, "Hide Combat Text")) $$.Window_BattleLog_displayAction.call(this, subject, item); }
 	}
 /**-------------------------------------------------------------------	
 	Zone States
