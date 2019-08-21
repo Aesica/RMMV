@@ -70,6 +70,8 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 - Can sort equip/state-added skills in with baseline skills and sort via various skill parameters
 - Can add zone-based effects to battles, so that being deep in a volcano burns everybody every turn, etc
+- Able to alter the color and opacity of the battle log window
+- Certain skills can be set to not display action text (or their name if using YEP_BattleEngineCore) via note tag
 
 **8/20/2019 - 2.0**
 - Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.
