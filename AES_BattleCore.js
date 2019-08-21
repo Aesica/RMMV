@@ -2,10 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 1.95;
+Aesica.BattleCore.version = 2.0;
 Aesica.Toolkit = Aesica.Toolkit || {};
+Aesica.Toolkit.battleCoreVersion = 1.1;
 /*:
-* @plugindesc v1.95 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v2.0 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -20,59 +21,6 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * @parent Improved Skill Sorting
 * @desc Skill property (id, name, etc) used to determine sort order.  Default: id
 * @default id
-*
-* @param Battle Commands
-* @desc Enable the battle command control and limit break system provided by this plugin?
-* @type boolean
-* @on Enable
-* @off Disable
-* @default true
-*
-* @param Limit Break Command
-* @parent Battle Commands
-* @desc This is a skillType ID.  When TP reaches specified threshold, replace "Attack" with this command.  0: Disable
-* @type number
-* @min 0
-* @default 0
-*
-* @param Limit Break Threshold
-* @parent Battle Commands
-* @desc If a limit break command is specfied above, this is the TP threshold required to enable it.
-* @type number
-* @min 0
-* @default 100
-*
-* @param Single Skill Command Order
-* @parent Battle Commands
-* @desc Sets whether single skill commands appear before or after skill category commands (Magic, Special, etc)
-* @type boolean
-* @on Before
-* @off After
-* @default true
-*
-* @param Enable Attack
-* @parent Battle Commands
-* @desc Shows or hides the "Attack" command in battle.
-* @type boolean
-* @on Show
-* @off Hide
-* @default true
-*
-* @param Enable Guard
-* @parent Battle Commands
-* @desc Shows or hides the "Guard" command in battle.
-* @type boolean
-* @on Show
-* @off Hide
-* @default true
-*
-* @param Enable Item
-* @parent Battle Commands
-* @desc Shows or hides the "Item" command in battle.
-* @type boolean
-* @on Show
-* @off Hide
-* @default true
 *
 * @param Combat Formulas
 * @desc Enable the extra combat formula functions provided by this plugin?
@@ -143,8 +91,20 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * @type text
 * @default 0
 *
+* @param Extra Death States
+* @desc List of "game over" states besides 1.  Separate multiple state IDs with a comma:  42, 43, 666
+* @type text
+*
+* @param Auto-Apply Zone Effects
+* @desc If enabled, automatically applies Zone Effects (if any) to targets each turn during battle.
+* @type boolean
+* @on Enable
+* @off Disable
+* @default true
+* 
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+* Support me on Patreon:  https://www.patreon.com/aesica
 *
 * IMPORTANT - NOTE TAGS: The note tags used by this plugin are flexible,
 * allowing for two different interchangeable formats:
@@ -153,75 +113,116 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * When using eval in note tags (specifically the > sign) the second format is
 * necessary if you want to avoid closing the tag prematurely.
 * 
-* <Note>value > 5</Note>    Eval:  "value > 5" (good)
-* <Note: value > 5>			Eval:  "value "    (bad)
+* <Note>value > 5</Note>  Eval:  "value > 5" (good)
+* <Note: value > 5>       Eval:  "value "    (bad)
+*
+* There's also a parameter-based note tag syntax used by some functions that's
+* formatted similarly to standard HTML parameters:
+* <Note: name="Aesica" class="Programmer">
+*
+* Multiple groups of parameter sets in this format are separated by a
+* semicolon.  Also, the order each parameter appears in does not matter, and
+* certain parameters can be omitted entirely when specified:
+* <Note: name="Fido" pet="Dog"; pet="Cat" name="Socks"; pet="Potato">
+* 
+* Double-quotes are required for parameter values, thus:
+* <Note: name="Aesica"> // Good
+* <Note: name='Aesica'> // Bad and will probably vomit errors
+* <Note: name=Aesica>   // Bad and will probably vomit errors
 *
 * List of crap this plugin can do:
 *
 * ----------------------------------------------------------------------
 *
-* Battle Command Control
-* Allows you to easily prevent the Attack, Guard, and Item commands from showing
-* in combat via plugin parameters.  Pretty self-explanatory.
+* Zone Effects
+* Certain zones can have effects associated with them that can be applied to
+* the party, the enemies, or both indiscriminately.  They can be set to either
+* be applied automatically each turn during battle or applied manually in or
+* out of battle by using the following plugin command:
+*
+* ApplyZoneEffects
 * 
-* Also allows the use of a basic limit break system, where upon reaching a
-* specified TP threshold, 'Attack' is replaced by a skillType command where
-* a character's limit break/ultimate skills can be accessed.
+* This applies zone-specific effects to the target group, optionally filtered
+* by custom note tags present on each target.  Tags such as <Metal Armor> can
+* be used to apply a state like "Magnetize" and deal damage to each target the
+* tag is found on.  Tags are searched for in actors, enemies, classes, weapons,
+* armors, and states.
 *
-* Note that you can put standard Attack in the limit break skillset so players
-* can still select it instead of their limit break for that particular turn.
+* Note that each zone can have multiple effects, with each group of effects
+* being separated by a semicolon (;).  The value for each property must be 
+* enclosed in double quotes (")
 *
-* <Replace Attack: x>
-* Will replace the Attack command with the skill having id number x.  This note
-* tag can be placed on actors, classes, weapons, and states to replace the
-* attack command with another skill.
+* To set zone effects for a particular zone, apply the following note tag
+* to the zone's note box:
 *
-* <Single Skill Command: x>
-* <Single Skill Command: x, y, z, etc>
-* Adds one or more skills with the specified skill id directly to the actor
-* command list.  For example, if skill 13 is Wind Slash, which deals wind
-* damage to all foes and the following tag is placed on default Harold:
-* <Single Skill Command: 13>
-* Harold's commands will be: Attack, Wind Slash, Magic, Guard, Item
-* Note that whether these single skill commands appear before or after the
-* skill category commands (ie, Magic) can be set in the plugin parameters.
-* This tag can be placed on actors, classes, equips, and states.
+* <Zone Effect: paramSet1; paramSet2; ...etc>
 *
-* <Unleash Attack: x, y>
-* <Unleash Attack>
-* x, y
-* x2, y2
-* </Unleash Attack>
-* Using a basic attack has a chance to use the specified skill.
-* x represent a skill id and y represent the chance for that skill to activate
-* instead of the normal attack skill.  This chance is a value between 0
-* (0% chance) and 1 (100% chance) and can be expressed as an eval.  The eval
-* code has acces to the user and any related stats (user.hp, etc).  Multiple
-* unleash skills can be set by separating id/chance pairs with a linebreak.
-* A few examples:
-* <Unleash Attack: 7, 0.3>                     // 30% chance to use skill 7
-* <Unleash Attack>                             // 10%: skill 5, 25%: skill 9
-* 5, 0.1                                       // skills are checked from
-* 9, 0.25                                      // first to last until
-* </Unleash Attack>                            // successful 
-* <Unleash Attack: 15, 1 - user.hp / user.mhp> // higher chance with lower hp
-* <Unleash Attack: 17, 50 <= user.tp>          // used if user's tp is 50+
-* <Unleash Attack: 21, user.hp < 20 ? 1 : 0>   // 100% if user hp below 20
-* Priority is, from lowest to highest: actor/enemy, class, equip, state
+* Replace "paramSetn" with one or more of the following parameters:
 *
-* <Unleash Modifier: x>
-* This is a multiplier applied to the chance for unleash attacks to trigger.
-* So <Unleash Modifier: 2> will double the chance of unleashing a special
-* attack.  This can be placed on actors/enemies, classes, equips, and states.
+* state:  The list of state IDs to apply.  Separate multiple states with
+* commas.  If omitted, no states are applied
 *
-* <Guard State: x, y, ...z>
-* When a battler uses guard, the target (usually the user) will be affected
-* by the specified state(s).  This tag applies to actors/enemies, classes,
-* equips, and states.
+* damage:  Deals a specified amount of damage to each affected target.  This
+* is processed as an eval.  The value "target" references the current target,
+* so target.mdf or target.mhp etc.  If omitted, no damage is dealt.  You can
+* give this damage elemental properties by adding target.elementRate(elementId)
+* an/dor physical/magical damage properties by adding target.pdr or
+* target.mdr, to your equation respectively.  See the examples below for details.
 *
-* <Guard State All: x, y, ...z>
-* Same as <Guard State> but applies the state(s) to all allies of the target.
+* animation:  The animation effect to apply, if any.  Omit this property
+* for no animation.  Note that damage, states, and animations are all applied
+* instantly at the same time, so keep your animations short.
+* 
+* target:  This can be either "party" or "troop" to specifically target
+* one side or the other, or it can be omitted to target all sides.  If
+* invoked outside of battle, obviously the troop portion will be ignored.
 *
+* weakness:  A note tag that must be present on a target before the effect
+* can be applied to them.  This note tag can be placed on actors, enemies,
+* classes, equips, and states.  If omitted, every unit in the target
+* party/parties will be affected.
+*
+* immune:  A note tag that cannot be present on a target for the effect
+* to be applied to them.  This note tag can be placed on actors, enemies,
+* classes, equips, and states.  This property can be omitted if no special
+* immunity effects/items/etc apply.
+*
+* Multiple groups of states/conditions/animations can be separated by a
+* semicolon (;)
+*
+* Example uses:
+*
+* <Zone Effect: damage="(500 - target.mdf) * target.elementRate(2)">
+* Deals 500 damage to all targets, reduced by their mdf and adjusted by
+* their element rate for element ID 2.
+*
+* <Zone Effect: damage="100 * target.mdr">
+* Deals 100 damage to the target that is modified by the target's magical
+* damage rate.
+*
+* <Zone Effect: state="5">
+* Applies state 5 to all targets.
+*
+* <Zone Effect: state="5" target="party">
+* Applies state 5 to the party side only.
+*
+* <Zone Effect: state="1" immune="Oxygen Tank">
+* Kills all target without an <Oxygen Tank> note tag.
+*
+* <Zone Effect: animation="23" target="party">
+* Plays animation 23 on the party when invoked, nothing more.
+*
+* <Zone Effect: state="5, 6" weakness="Metallic Armor">
+* Applies states 5 and 6 to any target with the <Metallic Armor> tag.
+*
+* <Zone Effect: state="5" animation="23"; state="7" immune="Blessing">
+* Applies state 5 to all targets and plays animation 23 on each, and any
+* target without the <Blessing> note tag will also be affected by state 7.
+* 
+* <Zone Effect: state="5" target="troop">
+* <Zone Effect: target="troop" states="5">
+* Both are exactly the same and will apply state 5 to the enemy side only.
+* 
 * ----------------------------------------------------------------------
 *
 * Damage/Healing Formulas
@@ -362,7 +363,7 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 * // 50% of the target's hp, or 0 if affected by <Immune to Gravity>
 *
 * Aesica.Core.gravity(b, 0.75) || Aesica.Core.damage(a.mat, 3, b.mdf, 0.2)
-* // 75% of the target's hp, or if <Immune to Gravity, uses the plugin
+* // 75% of the target's hp, or if <Immune to Gravity>, uses the plugin
 * // paramter damage formula with a multiplier of 3 and damage variance of
 * // 20% (since you want the formula box's varianace set to 0%)
 *
@@ -379,15 +380,8 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 	$$.pluginParameters = PluginManager.parameters("AES_BattleCore");
 	$$.params = {};
 	$$.params.section = {};
-	$$.params.section.battleCommands = String($$.pluginParameters["Battle Commands"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.combatFormulas = String($$.pluginParameters["Combat Formulas"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.battleEndEffects = String($$.pluginParameters["Battle End Effects"]).toLowerCase() === "false" ? false : true;
-	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
-	$$.params.limitThreshold = +$$.pluginParameters["Limit Break Threshold"] || 0;
-	$$.params.singleSkillCommandOrder = String($$.pluginParameters["Single Skill Command Order"]).toLowerCase() === "false" ? false : true;
-	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
-	$$.params.enableGuard = String($$.pluginParameters["Enable Guard"]).toLowerCase() === "false" ? false : true;
-	$$.params.enableItem = String($$.pluginParameters["Enable Item"]).toLowerCase() === "false" ? false : true;
 	$$.params.damageFormula = String($$.pluginParameters["Damage Formula"]);
 	$$.params.healingFormula = String($$.pluginParameters["Healing Formula"]);
 	$$.params.minDamage = +$$.pluginParameters["Minimum Damage"] || 0;
@@ -399,41 +393,70 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 	$$.params.battleEndRefresh = String($$.pluginParameters["Recover MP"]);
 	$$.params.improvedSkillSorting = String($$.pluginParameters["Improved Skill Sorting"]).toLowerCase() === "false" ? false : true;
 	$$.params.skillSortProperty = String($$.pluginParameters["Skill Sort Property"]);
+	$$.params.extraDeathStates = (function(s){ return s.replace(/ /g, "") == "" ? [] : s.split(",").map(x => +x || 1); })(String($$.pluginParameters["Extra Death States"]));
+	$$.params.autoApplyZoneEffects = String($$.pluginParameters["Auto-Apply Zone Effects"]).toLowerCase() === "false" ? false : true;
+	
+	$$.Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+	Game_Interpreter.prototype.pluginCommand = function(command, args)	
+	{
+		$$.Game_Interpreter_pluginCommand.call(this, command, args);
+		if (command.match(/^ApplyZoneEffects/i)) $$.applyZoneEffects();
+	}
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
-//-------------------------------------------------------------------*/	
-	Aesica.Toolkit.getTag = function(tag)
+//-------------------------------------------------------------------*/
+	if ((Aesica.Toolkit.version || 0) < Aesica.Toolkit.battleCoreVersion)
 	{
-		var result;
-		var note = this.note || "";
-		if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
-		else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
-		return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
-	}
-	Aesica.Toolkit.tagExists = function(tag)
-	{
-		var note = this.note || "";
-		return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
-	}
-	Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
-	{
-		var value = [];
-		var isActor = this.isActor();
-		var actor = isActor ? this.actor() : this.enemy();
-		var equip, state;
-		if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
-		if (deepScan)
+		Aesica.Toolkit.version = Aesica.Toolkit.battleCoreVersion;
+		Aesica.Toolkit.getTag = function(tag)
 		{
-			if (isActor)
-			{
-				if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
-				equip = this.weapons().concat(this.armors());
-				for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
-			}
-			state = this.states();
-			for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
+			var result;
+			var note = this.note || "";
+			if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
+			else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
+			return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
 		}
-		return deepScan ? value : (value[0] ? value[0] : false);
+		Aesica.Toolkit.tagExists = function(tag)
+		{
+			var note = this.note || "";
+			return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
+		}
+		Aesica.Toolkit.parseTagData = function(tagData)
+		{
+			tagData = tagData.split(";");
+			var oUnit, aList = [];
+			var match, rx = /([A-Za-z0-9]+)="([^"]+)"/gi;
+			for (i in tagData)
+			{
+				oUnit = {};
+				while (match = rx.exec(tagData[i]))
+				{
+					oUnit[match[1]] = match[2];
+				}
+				aList[i] = oUnit;
+			}
+			return aList;
+		}	
+		Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
+		{
+			var value = [];
+			var isActor = this.isActor();
+			var actor = isActor ? this.actor() : this.enemy();
+			var equip, state;
+			if (Aesica.Toolkit.tagExists.call(actor, tag)) value.push(Aesica.Toolkit.getTag.call(actor, tag));
+			if (deepScan)
+			{
+				if (isActor)
+				{
+					if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
+					equip = this.weapons().concat(this.armors());
+					for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
+				}
+				state = this.states();
+				for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
+			}
+			return deepScan ? value : (value[0] ? value[0] : false);
+		}
 	}
 /**-------------------------------------------------------------------	
 	Damage/Healing formulas and Battler functions
@@ -568,17 +591,39 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 		Game_BattlerBase.prototype.anyStateAffected = function(...states)
 		{
 			var bReturn = false;
-			for (i in states)
+			var stateList = [];
+			for (i in states) stateList = stateList.concat(states[i]);
+			for (i in stateList)
 			{
-				bReturn = this.isStateAffected(states[i]);
+				bReturn = this.isStateAffected(stateList[i]);
 				if (bReturn) break;
 			}
 			return bReturn;
 		}
+		Game_Unit.prototype.numAnyStateAffected = function(...states)
+		{
+			var iReturn = 0;
+			var party = this.members();
+			var stateList = [];
+			for (i in states) stateList = stateList.concat(states[i]);
+			for (i in party) iReturn += party[i].anyStateAffected(stateList) ? 1 : 0;
+			return iReturn;
+		}
+		Game_Unit.prototype.numAllStateAffected = function(...states)
+		{
+			iReturn = 0;
+			var party = this.members();
+			var stateList = [];
+			for (i in states) stateList = stateList.concat(states[i]);
+			for (i in party) iReturn += party[i].allStateAffected(stateList) ? 1 : 0;
+			return iReturn;
+		}
 		Game_BattlerBase.prototype.allStateAffected = function(...states)
 		{
 			var iReturn = 0;
-			for (i in states){ if (this.isStateAffected(states[i])) iReturn++; }
+			var stateList = [];
+			for (i in states) stateList = stateList.concat(states[i]);
+			for (i in stateList){ if (this.isStateAffected(stateList[i])) iReturn++; }
 			return iReturn == iLength;
 		}
 		Game_BattlerBase.prototype.tagStat = function(stat)
@@ -613,194 +658,11 @@ Aesica.Toolkit = Aesica.Toolkit || {};
 		}
 	}
 /**-------------------------------------------------------------------	
-	Static command control - Attack, Guard, Item, Limit Breaks,
-	Attack replacers, and Guard state bonuses
-//-------------------------------------------------------------------*/
-	if ($$.params.section.battleCommands)
-	{
-		Scene_Battle.prototype.createActorCommandWindow = function()
-		{
-			this._actorCommandWindow = new Window_ActorCommand();
-			if ($$.params.enableAttack) this._actorCommandWindow.setHandler("attack", this.commandAttack.bind(this));
-			this._actorCommandWindow.setHandler("skill", this.commandSkill.bind(this));
-			this._actorCommandWindow.setHandler("singleSkill", this.commandSingleSkill.bind(this));
-			if ($$.params.enableGuard) this._actorCommandWindow.setHandler("guard", this.commandGuard.bind(this));
-			if ($$.params.enableItem) this._actorCommandWindow.setHandler("item", this.commandItem.bind(this));
-			this._actorCommandWindow.setHandler("cancel", this.selectPreviousCommand.bind(this));
-			this.addWindow(this._actorCommandWindow);
-		}
-		Scene_Battle.prototype.commandSingleSkill = function()
-		{
-			var skill = $dataSkills[this._actorCommandWindow.currentExt()];
-			BattleManager.inputtingAction().setSkill(skill.id);
-			BattleManager.actor().setLastBattleSkill(skill);
-			this.onSelectAction();
-		}
-		Window_ActorCommand.prototype.makeCommandList = function()
-		{
-			if (this._actor)
-			{
-				if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill()) this.addLimitCommand();
-				else if ($$.params.enableAttack) this.addAttackCommand();
-				if ($$.params.singleSkillCommandOrder)
-				{
-					this.addSingleSkillCommands();
-					this.addSkillCommands();
-				}
-				else
-				{
-					this.addSkillCommands();
-					this.addSingleSkillCommands();
-				}
-				if ($$.params.enableGuard) this.addGuardCommand();
-				if ($$.params.enableItem) this.addItemCommand();
-			}
-		}
-		$$.Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
-		Window_ActorCommand.prototype.addAttackCommand = function()
-		{
-			var battler = this._actor;
-			var tagName = "Replace Attack";
-			var attackId = 1;
-			if (battler)
-			{
-				attackId = +battler.getTag(tagName, true).reverse()[0] || 1;
-				battler._attackSkillReplaceID = attackId;
-				this.addCommand($dataSkills[attackId].name, "attack", battler.canAttack());
-			}
-			else $$.Window_ActorCommand_addAttackCommand.call(this);
-		}
-		Window_ActorCommand.prototype.addSingleSkillCommands = function()
-		{
-			var battler = this._actor;
-			var tagName = "Single Skill Command";
-			var commandList, canUse, skillId; 
-			if (battler)
-			{
-				commandList = battler.getTag(tagName, true).join(",").split(",");
-				for (i in commandList)
-				{
-					skillId = +commandList[i]
-					if (skillId)
-					{
-						canUse = battler.canUse($dataSkills[skillId]);
-						this.addCommand($dataSkills[skillId].name, "singleSkill", canUse, skillId);
-					}
-				}
-			}
-		}
-		Game_BattlerBase.prototype.attackSkillId = function()
-		{
-			return this._attackSkillReplaceID || 1;
-		}
-		$$.Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
-		Game_Action.prototype.applyItemUserEffect = function(target)
-		{
-			$$.Game_Action_applyItemUserEffect.call(this, target);
-			if (this.isGuard()) this.applyGuardBonusStates(target);
-		}
-		Game_Actor.prototype.hasLimitSkill = function()
-		{
-			var skills = this.skills();
-			var bReturn = false;
-			for (i in skills)
-			{
-				if (skills[i].stypeId == $$.params.limitCommand)
-				{
-					bReturn = true;
-					break;
-				}
-			}
-			return bReturn;
-		}
-		Game_Action.prototype.applyGuardBonusStates = function(target)
-		{
-			var user = this.subject();
-			var stateList = user.getTag("Guard State", true);
-			var stateListAll = user.getTag("Guard State All", true);
-			var x, targetParty = target.friendsUnit().members();
-			for (i in stateList)
-			{
-				x = +stateList[i];
-				if (x) target.addState(x);
-			}				
-			for (i in stateListAll)
-			{
-				x = +stateListAll[i];
-				if (x) for (j in targetParty) targetParty[j].addState(x);
-			}
-		}
-		Window_ActorCommand.prototype.addLimitCommand = function()
-		{
-			this.addCommand($dataSystem.skillTypes[$$.params.limitCommand], 'skill', true, $$.params.limitCommand);
-		}
-	}
-/**-------------------------------------------------------------------	
-	Skill Unleash
-//-------------------------------------------------------------------*/
-	$$.BattleManager_startAction = BattleManager.startAction;
-	BattleManager.startAction = function()
-	{
-		var subject = this._subject;
-		var action = subject ? subject.currentAction() : null;
-		if (action) action.attemptUnleash();
-		$$.BattleManager_startAction.call(this);
-	}
-	Game_Battler.prototype.unleashModifier = function()
-	{
-		var result = 1;
-		var modifierList = this.getTag("Unleash Modifier", true);
-		for (i in modifierList) result *= +modifierList[i] || 1;
-		return result;
-	}
-	Game_Action.prototype.attemptUnleash = function()
-	{
-		var user = this.subject();
-		var item = this.item();
-		var id, newId, unleashList, current, pair, modifier, rng, rawEval, currentId, currentEval;
-		if (user && item && this.isSkill())
-		{
-			if (user && item)
-			{
-				id = newId = item.id;
-				if (id === user.attackSkillId())
-				{
-					unleashList = user.getTag("Unleash Attack", true);
-					unleashList.reverse();
-					modifier = user.unleashModifier();
-					rng = Math.random();
-					for (i in unleashList)
-					{
-						current = unleashList[i].split(/[\r\n]+/);
-						for (j in current)
-						{
-							pair = current[j].split(",");
-							currentId = +pair.shift() || 1;
-							rawEval = pair.join(",");
-							try
-							{
-								currentEval = +eval(rawEval) || 0;
-							}
-							catch(e)
-							{
-								console.log("AES_BattleCore: Eval error in <Unleash Attack> => " + rawEval);
-								currentEval = 0;
-							}
-							newId = (rng < currentEval * modifier) ? currentId : id;
-							if (newId !== id) break;
-						}
-						if (newId !== id) break;
-					}
-					this.setSkill(newId);
-				}
-			}
-		}
-	}
-/**-------------------------------------------------------------------	
 	Skill sorting
 //-------------------------------------------------------------------*/
 $$.Game_Actor_skills = Game_Actor.prototype.skills;
-Game_Actor.prototype.skills = function() {
+Game_Actor.prototype.skills = function()
+{
     var list = $$.Game_Actor_skills.call(this);
     return $$.params.improvedSkillSorting ? list.sort($$.sortSkills) : list;
 };
@@ -828,6 +690,80 @@ $$.sortSkills = function(a, b)
 				actor.gainMp(Math.floor(+eval($$.params.battleEndRefresh)) || 0);
 			}
 			actor.refresh();
+		}
+	}
+/**-------------------------------------------------------------------	
+	Multiple Death States
+//-------------------------------------------------------------------*/
+	$$.Game_Party_isAllDead = Game_Party.prototype.isAllDead;
+	Game_Party.prototype.isAllDead = function()
+	{
+		var bReturn = $$.Game_Party_isAllDead.call(this);
+		return bReturn || this.numAnyStateAffected($$.params.extraDeathStates) == this.aliveMembers().length;
+	}
+/**-------------------------------------------------------------------	
+	Zone States
+//-------------------------------------------------------------------*/
+	$$.BattleManager_endTurn = BattleManager.endTurn;
+	BattleManager.endTurn = function()
+	{
+		$$.BattleManager_endTurn.call(this);
+		// Needed to include a hackish workaround for YEP_BattleEngineCore 
+		// needlessly spamming the crap out of BattleManager.endTurn...
+		if ($$.params.autoApplyZoneEffects)
+		{
+			if (!Imported.YEP_BattleEngineCore || Imported.YEP_BattleEngineCore && this._enteredEndPhase) $$.applyZoneEffects();
+		}
+	}
+	$$.applyZoneEffects = function()
+	{
+		var tagName = "Zone Effect";
+		var tagData = Aesica.Toolkit.getTag.call($dataMap, tagName);
+		var members, target, inBattle, isImmune, isWeak, damageValue, affectedCount = 0;
+		var effectId, animId, damage, immune, weakness, targetGroup;
+		if (tagData)
+		{
+			tagData = Aesica.Toolkit.parseTagData(tagData);
+			inBattle = $gameParty.inBattle();
+			for (i in tagData)
+			{
+				effects = (tagData[i].state || "").split(",").map(x => +x || 0);
+				animId = +tagData[i].animation || 0;
+				weakness = tagData[i].weakness;
+				immune = tagData[i].immune;
+				targetGroup = tagData[i].target || "";
+				damage = tagData[i].damage;
+				if (targetGroup.match(/party|allies/i)) members = $gameParty.aliveMembers();
+				else if (targetGroup.match(/troop|enemies/i)) members = $gameTroop.aliveMembers();
+				else members = $gameParty.aliveMembers().concat($gameTroop.aliveMembers());
+				for (j in members)
+				{
+					target = members[j];
+					isImmune = target.getTag(immune, true).length > 0;
+					isWeak = target.getTag(weakness, true).length > 0;
+					if (weakness ? isWeak && !isImmune : !isImmune)
+					{
+						try
+						{
+							damageValue = Math.floor(+eval(damage)) || 0;
+						}
+						catch(e)
+						{
+							console.log("AES_BattleCore: Eval error in ZoneState damage formula for Map ID (" + $gameMap.mapId() + ")\n" + damage);
+						}						
+						if (damageValue)
+						{
+							target.gainHp(-damageValue);
+							target.startDamagePopup();
+							target.refresh();
+						}
+						if (animId > 0 && inBattle) target.startAnimation(animId);
+						for (k in effects) if (effects[k] > 0) target.addState(effects[k]);
+						affectedCount++;
+					}
+				}
+				if (!inBattle && animId > 0 && affectedCount > 0) $gamePlayer.requestAnimation(animId);
+			}
 		}
 	}
 })(Aesica.BattleCore);
