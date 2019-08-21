@@ -21,6 +21,7 @@ Aesica.RaceCore.version = 1.5;
 * 
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
+* Support me on Patreon:  https://www.patreon.com/aesica
 *
 * ===================
 * Introduction
