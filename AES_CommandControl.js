@@ -85,20 +85,47 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * ----------------------------------------------------------------------
 * Allows you to easily prevent the Attack, Guard, and Item commands from showing
 * in combat via plugin parameters.  Pretty self-explanatory.
+*
+* Additionally, these commands can be enabled (or disabled) on an individual
+* basis using note tags:
+*
+* <Command Attack: Show>
+* <Command Guard: Hide>
+* <Command Item: Hide>
+* ...etc
+*
+* These tags can be added to actors, classes, equips, and states in that order.
+* Thus, an actor with <Command Guard: Hide> won't have the guard command 
+* available even if it's enabled on everyone else by default.  He can, however,
+* equip a shield with <Command Guard: Show> and gain access to guard.  He can
+* even use guard if guard is disabled by default for everyone else.
 * 
-* Also allows the use of a basic limit break system, where upon reaching a
+* ----------------------------------------------------------------------
+* Limit Breaks
+* ----------------------------------------------------------------------
+* Allows for the use of a basic limit break system, where upon reaching a
 * specified TP threshold, 'Attack' is replaced by a skillType command where
 * a character's limit break/ultimate skills can be accessed.
 *
 * Note that you can put standard Attack in the limit break skillset and teach it
 * to each character so players can still select it instead of their limit break
 * for that particular turn.
+* 
+* To use:
+*
+* 1. Create a "Limit" skill type, but don't teach it to anyone
+* 2. Set it in the plugin parameters
+* 3. Create some skills of type "Limit" and teach them to characters who should
+*      be able to use them
+* 4. You're good to go!
 *
 * ----------------------------------------------------------------------
 * Replace the Attack command
 * ----------------------------------------------------------------------
 * <Replace Attack: skillId>
 * <Replace Attack: skillId, condition>
+* <Replace Attack>skillId, condition</Replace Attack>
+* 
 * Will replace the Attack command with the skill matching skillId.  The
 * condition is an optional eval that can be used to determine whether or not
 * the replacement takes place.  The "user" property is accessible for this.
@@ -107,6 +134,18 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * specified, the replacement will always occur.  This note tag can be placed on
 * actors, classes, weapons, and states to replace the attack command with
 * another skill.
+*
+* <Replace Attack: 4>
+* Replace the attack command with skill 4
+*
+* <Replace Attack: 4, user.isStateAffected(25)>
+* Replaces the attack command with skill 4 if the user is affected by
+*   state 25
+*
+* <Replace Attack>4, user.hp / user.mhp > 0.5</Replace Attack>
+* Replaces the attack command with skill 4 if the user's HP is above 50%
+*   Note that you need to use the <x></x> note tag format to prevent the
+*   greater-than sign from breaking the tag.
 *
 * ----------------------------------------------------------------------
 * Add single skill commands
