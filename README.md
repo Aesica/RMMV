@@ -1,3 +1,6 @@
+If you find these helpful, feel free to support me on Patreon:
+https://www.patreon.com/aesica
+
 ## Aesica's RMMV Plugins - Terms of Use
 These terms apply to every RMMV plugin in this repo:
 - Free to use in both free and commercial projects as long as I am given credit.
@@ -30,6 +33,9 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
 
+**8/20/2019 - 2.7**
+- Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.  In light of this change, it is strongly recommened that you update to this version or later if using more than one of my plugins.
+
 **8/1/2019 - 2.6**
 - Removed AutoSave functionality.  It is now its own plugin
 - Plugin commands used by this plugin are no longer case sensitive
@@ -53,10 +59,6 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 
 ### AES_BattleCore
 Info: The contents of this plugin were split off from AES_Core.  Includes various battle system improvements and features:
-- A basic "Limit Break" system
-- Option to disable Attack, Guard, or Item
-- Replace the attack command with a skill via note tags from actors, classes, equips, and states (lowest to highest priority)
-- Add states to either the user or entire party via guard with note tags on actors/enemies, classes, equips, and states
 - Damage formula functions for use in the formula box, allowing for later tweaks in 1 place instead of in every skill or item
 - Adjust the critical hit damage bonus modifier
 - Note tags capable of further tweaking the critical hit multiplier on actors/enemies, classes, equips, and states
@@ -67,6 +69,14 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Final Fantasy "Gravity" (percent-of-hp) formula with immunity available via actor/enemy, class, equip, and state note tags
 - Settings to recover hp and/or mp by varying amounts, as well as reviving dead members after battles
 - Can sort equip/state-added skills in with baseline skills and sort via various skill parameters
+- Can add zone-based effects to battles, so that being deep in a volcano burns everybody every turn, etc
+
+**8/20/2019 - 2.0**
+- Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.
+- Removed all of the "command control" functions (unleash, attack replace, guard state, disable attack/guard/item, etc).  Those effects now have their own plugin.
+- In light of this change, it is strongly recommened that you update to this version or later.
+- Added support for death/game over states in addition to the default death (1) state
+- Can now use zone-based effects (damage, state applications, etc) that can be auto-applied every turn in battle, as well as manually by plugin command
 
 **8/1/2019 - 1.95**
 - Bugfix for single skill commands.  There was heinous fuckery afoot, but this is no longer the case.
@@ -104,6 +114,17 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 
 ----------------------------------------------------------------------------------------------------------------------
 
+### AES_CommandControl
+Info:  Gives you more control over the various actor commands and such
+- Can enable/disable Attack/Guard/Item, both by default and individually by note tags
+- Can replace basic attack with another skill, optionally with conditional requirements
+- Allows for condition-based attack unleash effects
+- In addition to the default Guard state, guarding can grant additional states to either the user, their party, or both
+- Can add individual skills as actor commands
+- Features a basic limit break system that utilizes TP
+
+----------------------------------------------------------------------------------------------------------------------
+
 ### AES_CustomMP
 Info:  Allows extra customizations for MP
 - Allows for coloring the MP bar as well as the skill MP cost display on a per-class basis.
@@ -113,6 +134,9 @@ Info:  Allows extra customizations for MP
 - Improves the skill cost display to show both TP and MP for skills which cost both, similar to how YEP_SkillCore does it.
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
+
+**8/20/2019 - 1.6**
+- Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.  In light of this change, it is strongly recommened that you update to this version or later if using more than one of my plugins.
 
 **6/20/2019 - 1.5**
 - Expanded note tag functionality to include support for both <tag: x> and <tag>x</tag> formats
@@ -146,6 +170,9 @@ Info:  Adds autosaving to your game via plugin command
 - Can save into a specific slot using the SaveInSlot plugin command (advanced)
 
 Note:  If using YEP_SaveCore, this plugin needs to be placed below it in order for slot 1 locking to work properly!
+
+**8/20/2019 -1.1**
+- Just a few minor changes nobody will care about.  I don't even remember, actually!
 
 ----------------------------------------------------------------------------------------------------------------------
 
