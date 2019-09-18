@@ -127,6 +127,16 @@ Info:  Gives you more control over the various actor commands and such
 
 ----------------------------------------------------------------------------------------------------------------------
 
+### AES_EnemyGauge
+Info:  Adds gauges to enemies for various stats (hp, mp, tp, etc)
+- Hide specific gauges for specific foes
+- Supports custom stats/resources added by other plugins (see plugin documentation for details)
+- When dealing damage/expending HP/MP/TP/etc, can display the before/after difference briefly
+- Fully customizable gauge width, height, line thickness, padding, Y offset, etc
+- Compatible with YEP_X_BattleSysATB and can be used to display enemy ATB gauges if that plugin is used
+
+----------------------------------------------------------------------------------------------------------------------
+
 ### AES_CustomMP
 Info:  Allows extra customizations for MP
 - Allows for coloring the MP bar as well as the skill MP cost display on a per-class basis.
