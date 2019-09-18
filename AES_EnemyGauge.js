@@ -6,7 +6,7 @@ Aesica.EnemyGauge.version = 1;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battleCoreVersion = 1.1;
 /*:
-* @plugindesc v1.0 Add gauges to enemies during battle
+* @plugindesc v1.1 Add gauges to enemies during battle
 * @author Aesica
 *
 * @param Gauge Width
@@ -305,6 +305,7 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 					gauge = Object.create(stat);
 					gauge.dropValue = 0;
 					gauge.dropTimer = 0;
+					gauge.previousValue = 0;
 					gauge.color1 = this.parseColor(gauge.color1);
 					gauge.color2 = this.parseColor(gauge.color2);
 					gauge.color3 = this.parseColor(gauge.color3);
@@ -347,9 +348,13 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 					max = typeof gauges[i].max === "number" ? gauges[i].max : battler[gauges[i].max];
 					if ($$.params.dropDelay > 0)
 					{
-						if (current < gauges[i].dropValue && gauges[i].dropTimer === 0) gauges[i].dropTimer = $$.params.dropDelay;
+						if (current < gauges[i].previousValue)
+						{
+							gauges[i].dropTimer = $$.params.dropDelay;
+							gauges[i].previousValue = current;
+						}
 						if (gauges[i].dropTimer > 0) gauges[i].dropTimer--;
-						if (gauges[i].dropTimer === 0) gauges[i].dropValue = current || 0;
+						if (gauges[i].dropTimer === 0) gauges[i].previousValue = gauges[i].dropValue = current || 0;
 					}
 					this.drawGauge(x, y, $$.params.gaugeWidth, $$.params.gaugeHeight, gauges[i].dropValue / max, current / max, gauges[i].color3, gauges[i].color3, gauges[i].color1, gauges[i].color2);
 					y += $$.params.gaugeHeight + $$.params.gaugePadding + $$.params.gaugeLineThickness * 2;
