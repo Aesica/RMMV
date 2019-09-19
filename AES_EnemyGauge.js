@@ -87,6 +87,9 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 *    battler.msp()
 * cannot be read by this plugin.
 *
+* Color codes:  All color code plugin paramters can be either a window skin text
+* color code, such as 21, or an RGB color code such as #ff8844
+*
 * ATB gauge:  If using this plugin's ATB gauge for Yanfly's ATB plugin
 * (YEP_X_BattleSysATB) you'll need to place this plugin below it in your plugin
 * list so it can load the ATB gauge color scheme.  If placed above
