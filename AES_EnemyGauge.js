@@ -4,9 +4,9 @@ var Aesica = Aesica || {};
 Aesica.EnemyGauge = Aesica.EnemyGauge || {};
 Aesica.EnemyGauge.version = 1;
 Aesica.Toolkit = Aesica.Toolkit || {};
-Aesica.Toolkit.battleCoreVersion = 1.1;
+Aesica.Toolkit.enemyGaugeVersion = 1.15;
 /*:
-* @plugindesc v1.1 Add gauges to enemies during battle
+* @plugindesc v1.15 Add gauges to enemies during battle
 * @author Aesica
 *
 * @param Gauge Width
@@ -196,9 +196,9 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/
-	if ((Aesica.Toolkit.version || 0) < Aesica.Toolkit.battleCoreVersion)
+	if ((Aesica.Toolkit.version || 0) < Aesica.Toolkit.enemyGaugeVersion)
 	{
-		Aesica.Toolkit.version = Aesica.Toolkit.battleCoreVersion;
+		Aesica.Toolkit.version = Aesica.Toolkit.enemyGaugeVersion;
 		Aesica.Toolkit.getTag = function(tag)
 		{
 			var result;
