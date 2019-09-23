@@ -2,27 +2,24 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.6;
+Aesica.CMP.version = 1.7;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.customMpVersion = 1.0;
 /*:
-* @plugindesc v1.6 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.7 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
 * @param Default MP Gauge Color 1
 * @desc The default color 1 for MP gauges.  Default: 22
-* @type number
 * @default 22
 *
 * @param Default MP Gauge Color 2
 * @desc The default color 2 for MP gauges.  Default: 23
-* @type number
 * @default 23
 *
 * @param Default MP Cost Color
 * @desc The default color for the MP cost in skill lists:  Default 23
-* @type number
 * @default 23
 *
 * @param Skill Cost Font Size
@@ -278,6 +275,34 @@ Aesica.Toolkit.customMpVersion = 1.0;
 			else sReturn = Aesica.Toolkit.getTag.call(this.enemy(), "MP Name");		
 			return sReturn || TextManager.mpA;
 		}, configurable: true },
+		mpColor1: { get: function()
+		{
+			var result;
+			var customColor = this.isActor() ? Aesica.Toolkit.getTag.call($dataClasses[this._classId], "MP Gauge Color") : this.getTag("MP Gauge Color");
+			if (customColor)
+			{
+				customColor = customColor.split(",")[0];
+				if (customColor === undefined) customColor = 0;
+				else result = isNaN(+customColor) ? customColor : +customColor;
+			}
+			else result = $$.params.mpGaugeColor1Default;
+			this._mpColor1 = result;
+			return result;
+		}, configurable: true },
+		mpColor2: { get: function()
+		{
+			var result;
+			var customColor = this.isActor() ? Aesica.Toolkit.getTag.call($dataClasses[this._classId], "MP Gauge Color") : this.getTag("MP Gauge Color");
+			if (customColor)
+			{
+				customColor = customColor.split(",")[1];
+				if (customColor === undefined) customColor = 0;
+				else result = isNaN(+customColor) ? customColor : +customColor;
+			}
+			else result = $$.params.mpGaugeColor2Default;
+			this._mpColor2 = result;
+			return result;
+		}, configurable: true },
 	});
 	Game_BattlerBase.prototype.mpCostColor = function()
 	{
@@ -297,28 +322,13 @@ Aesica.Toolkit.customMpVersion = 1.0;
 	}
 	Window_Base.prototype.mpGaugeColor1 = function(){ return this.textColor($$.params.mpGaugeColor1Default); }
 	Window_Base.prototype.mpGaugeColor2 = function(){ return this.textColor($$.params.mpGaugeColor2Default); }
-	Window_Base.prototype.mpGaugeColor = function(index, actor)
-	{
-		var sReturn = "#ffffff";
-		var customColors = Aesica.Toolkit.getTag.call($dataClasses[actor._classId], "MP Gauge Color");
-		var color;
-		if (customColors)
-		{
-			customColors = customColors.split(",")[index];
-			if (customColors === undefined) color = this.textColor(0);
-			else color = +customColors;
-			sReturn = isNaN(color) ? customColors : this.textColor(color);
-			if (!sReturn) sReturn = "#000000";
-		}
-		else if (index == 0) sReturn = this.mpGaugeColor1();
-		else if (index == 1) sReturn = this.mpGaugeColor2();
-		return sReturn;
-	}
 	Window_Base.prototype.drawActorMp = function(actor, x, y, width)
 	{
 		width = width || 186;
-		var color1 = this.mpGaugeColor(0, actor);
-		var color2 = this.mpGaugeColor(1, actor);
+		var color1 = actor.mpColor1;
+		var color2 = actor.mpColor2;
+		if (typeof color1 === "number") color1 = this.textColor(color1);
+		if (typeof color2 === "number") color2 = this.textColor(color2);
 		this.drawGauge(x, y, width, actor.mpRate(), color1, color2);
 		this.changeTextColor(this.systemColor());
 		this.drawText(actor.mpA, x, y, 44);
