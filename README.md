@@ -127,13 +127,14 @@ Info:  Gives you more control over the various actor commands and such
 
 ----------------------------------------------------------------------------------------------------------------------
 
-### AES_EnemyGauge
-Info:  Adds gauges to enemies for various stats (hp, mp, tp, etc)
+### AES_BattlerGauge (formerly AES_EnemyGauge)
+Info:  Adds gauges above/beneath actors/enemies for various stats (hp, mp, tp, etc)
 - Hide specific gauges for specific foes
+- Can display different gauge widths for normal foes, bosses, and actors
 - Supports custom stats/resources added by other plugins (see plugin documentation for details)
 - When dealing damage/expending HP/MP/TP/etc, can display the before/after difference briefly
 - Fully customizable gauge width, height, line thickness, padding, Y offset, etc
-- Compatible with YEP_X_BattleSysATB and can be used to display enemy ATB gauges if that plugin is used
+- Compatible with YEP_X_BattleSysATB and can be used to display battler ATB gauges if that plugin is used
 
 ----------------------------------------------------------------------------------------------------------------------
 
