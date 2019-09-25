@@ -148,6 +148,9 @@ Info:  Allows extra customizations for MP
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
 
+**9-25-2019 - 1.7**
+- Added internal functionality for use with AES_BattlerGauge.  This version (or later) is required for displaying custom MP colors with that plugin
+
 **8/20/2019 - 1.6**
 - Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.  In light of this change, it is strongly recommened that you update to this version or later if using more than one of my plugins.
 
