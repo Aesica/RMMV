@@ -375,7 +375,6 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 				for (i in this._atbGauge) if (typeof this._atbGauge[i] === "number") this._atbGauge[i] = this.parseColor(this._atbGauge[i]);
 			}
 			this.height = height + this.standardPadding() * 2;
-			console.log(this);
 		}
 	}
 	Window_BattlerGauge.prototype.update = function()
@@ -423,8 +422,8 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 	}
 	Window_BattlerGauge.prototype.drawGauge = function(x, y, width, height, rate1, rate2, color1a, color1b, color2a, color2b)
 	{
-		rate1 = rate1 || 0;
-		rate2 = rate2 || 0;
+		rate1 = isNaN(rate1) ? 0 : rate1;
+		rate2 = isNaN(rate2) ? 0 : rate2;
 		var fillW1 = Math.floor(width * rate1);
 		var fillW2 = Math.floor(width * rate2);
 		var border = $$.params.gaugeLineThickness;
@@ -471,7 +470,6 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 			color3 = yepAtbGauge.colorCharge1;
 			color4 = yepAtbGauge.colorCharge2;
 		}
-		console.log(this._battler.name() + "::" +  color1 + "::" + color2 + "::" + color3 + "::" + color4 + "::" + rate1 + "::" + rate2);
 		this.drawGauge(x, y, width, height, rate1, rate2, color1, color2, color3, color4);
 	}
 })(Aesica.BattlerGauge);
