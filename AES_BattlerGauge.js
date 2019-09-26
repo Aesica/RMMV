@@ -422,8 +422,8 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 	}
 	Window_BattlerGauge.prototype.drawGauge = function(x, y, width, height, rate1, rate2, color1a, color1b, color2a, color2b)
 	{
-		rate1 = isNaN(rate1) ? 0 : rate1;
-		rate2 = isNaN(rate2) ? 0 : rate2;
+		if (isNaN(rate1)) rate1 = 0;
+		if (isNaN(rate2)) rate2 = 0;
 		var fillW1 = Math.floor(width * rate1);
 		var fillW2 = Math.floor(width * rate2);
 		var border = $$.params.gaugeLineThickness;
