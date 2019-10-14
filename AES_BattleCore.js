@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 2.02;
+Aesica.BattleCore.version = 2.03;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battleCoreVersion = 1.1;
 /*:
-* @plugindesc v2.02 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v2.03 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -241,6 +241,13 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * <Zone Effect: state="5" target="troop">
 * <Zone Effect: target="troop" states="5">
 * Both are exactly the same and will apply state 5 to the enemy side only.
+* 
+* ----------------------------------------------------------------------
+*
+* <Hide Combat Text>
+* This note tag can be added to skills to hide the initial-use combat text,
+* or the skill name if using a plugin like YEP_BattleEngineCore.  Pretty
+* straightforward.
 * 
 * ----------------------------------------------------------------------
 *
