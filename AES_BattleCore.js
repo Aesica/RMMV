@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 2.01;
+Aesica.BattleCore.version = 2.02;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battleCoreVersion = 1.1;
 /*:
-* @plugindesc v2.01 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v2.02 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -31,13 +31,13 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 *
 * @param Damage Formula
 * @parent Combat Formulas
-* @desc Damage formula eval used by Aesica.Core.damage().  See plugin description for more info.
+* @desc Damage formula eval used by Aesica.BattleCore.damage().  See plugin description for more info.
 * @type text
 * @default userStat * multiplier - targetStat * 2
 *
 * @param Healing Formula
 * @parent Combat Formulas
-* @desc Healing formula eval used by Aesica.Core.heal().  See plugin description for more info.
+* @desc Healing formula eval used by Aesica.BattleCore.heal().  See plugin description for more info.
 * @type text
 * @default userStat * multiplier + targetStat
 *
@@ -284,27 +284,27 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * 
 * Function Calls:
 *
-* Aesica.Core.damage(a.value, multiplier, b.value, optionalVariance)
+* Aesica.BattleCore.damage(a.value, multiplier, b.value, optionalVariance)
 * Where a.value is a.atk, a.mat, etc and b.value is b.def, b.mdf, etc. The
 * multiplier value is typically used by various skills to make them stronger
 * (or weaker).  If left blank, multiplier defaults to 1 and b.value defaults
 * to 0.  The variance value is optional and only really useful if you don't
 * intend to use the editor's damage variance field.
 *
-* Aesica.Core.heal(a.value, multiplier, b.value, optionalVariance)
+* Aesica.BattleCore.heal(a.value, multiplier, b.value, optionalVariance)
 * Similar to the above, however you may want to use a different unified
 * formula for healing.  The variance value is optional and only really useful
 * if you don't intend to use the editor's damage variance field.
 *
-* Aesica.Core.gravity(b, magnitude)
+* Aesica.BattleCore.gravity(b, magnitude)
 * For FF-style "gravity" attacks which deal a percent of the target's current
-* HP based on the specified multiplier.  So Aesica.Core.gravity(b, 0.5) would
+* HP based on the specified multiplier.  So Aesica.BattleCore.gravity(b, 0.5) would
 * return 50% of the target's current hp.  The <Immunme to Gravity> note tag
 * can be used to make the target immune (return value 0). This tag can be
 * placed on actors, enemies, classes, states, or equipment.  Note:  Be sure
 * to set the damage formula box's "Variance" field to 0%.
 *
-* Aesica.Core.variance(n)
+* Aesica.BattleCore.variance(n)
 * Allows you to apply a variance to a damage or healing result, although in 
 * most cases, this is done for you via the formula box
 *
@@ -355,33 +355,33 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 *
 * Here's some sample damage formula box applications of these various functions:
 *
-* Aesica.Core.damage(a.atk, 5, b.def)
+* Aesica.BattleCore.damage(a.atk, 5, b.def)
 * // uses the damage formula from the plugin parameters to check a.atk with
 * // a multiplier of 5 vs b.def
 *
-* Aesica.Core.damage(1000, 1, b.mdf)
+* Aesica.BattleCore.damage(1000, 1, b.mdf)
 * // checks 1000 damage against b.mdf
 *
-* Aesica.Core.damage(1000)
+* Aesica.BattleCore.damage(1000)
 * // 1000 fixed damage (doing fixed damage this way is not necessary)
 * 
-* Aesica.Core.heal(a.mat, 3)
+* Aesica.BattleCore.heal(a.mat, 3)
 * // uses the healing formula from the plugin parameters to combine a.mat with
 * // a multiplier of 3
 * 
-* Aesica.Core.damage(a.weaponAtk, 10, b.def)
+* Aesica.BattleCore.damage(a.weaponAtk, 10, b.def)
 * // Applies a's WEAPON ATK total to a multiplier of 10 and checks it against
 * // b.def
 *
-* Aesica.Core.damage(a.tagStat("Telepathy"), 8, b.tagStat("Willpower"));
+* Aesica.BattleCore.damage(a.tagStat("Telepathy"), 8, b.tagStat("Willpower"));
 * // Deals damage based on the user's Telepathy tag stat with a multiplier of
 * // 8 vs the target's Willpower tag stat.  See the tagStat section for
 * // additional details
 *
-* Aesica.Core.gravity(b, 0.5)
+* Aesica.BattleCore.gravity(b, 0.5)
 * // 50% of the target's hp, or 0 if affected by <Immune to Gravity>
 *
-* Aesica.Core.gravity(b, 0.75) || Aesica.Core.damage(a.mat, 3, b.mdf, 0.2)
+* Aesica.BattleCore.gravity(b, 0.75) || Aesica.BattleCore.damage(a.mat, 3, b.mdf, 0.2)
 * // 75% of the target's hp, or if <Immune to Gravity>, uses the plugin
 * // paramter damage formula with a multiplier of 3 and damage variance of
 * // 20% (since you want the formula box's varianace set to 0%)
