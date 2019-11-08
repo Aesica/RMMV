@@ -137,6 +137,7 @@ Info:  Adds gauges above/beneath actors/enemies for various stats (hp, mp, tp, e
 - Compatible with YEP_X_BattleSysATB and can be used to display battler ATB gauges if that plugin is used
 
 **11/7/2019 - 1.4**
+- Fixed a bug that allowed actor gauges to show in the side view locations when using front view
 - Fixed a bug where this plugin was unintentionally dependent on YEP_BattleCore.  Oops!
 
 **9/26/2019 - 1.3**
