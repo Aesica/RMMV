@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattlerGauge = true;
 var Aesica = Aesica || {};
 Aesica.BattlerGauge = Aesica.BattlerGauge || {};
-Aesica.BattlerGauge.version = 1.4;
+Aesica.BattlerGauge.version = 1.41;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battlerGaugeVersion = 1.2;
 /*:
-* @plugindesc v1.4 Add gauges to actors or enemies during battle
+* @plugindesc v1.41 Add gauges to actors or enemies during battle
 * @author Aesica
 *
 * @param Player Gauge Width
@@ -292,14 +292,14 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 	{
 		return this.isAlive();
 	}
-	Game_Battler.prototype.setSprite = function(sprite)
+	Game_Battler.prototype.setSprite = function(spriteId)
 	{
-		this._sprite = sprite;
+		this._spriteCacheIndex = spriteId;
 	}
 	Object.defineProperties(Game_Battler.prototype, 
 	{
-		spriteX: { get: function(){ return this._sprite ? this._sprite.x : 0; }, configurable: true },
-		spriteY: { get: function(){ return this._sprite ? this._sprite.y : 0; }, configurable: true },
+		spriteX: { get: function(){ return this._spriteCacheIndex ? BattleManager._spriteList[this._spriteCacheIndex].x : 0; }, configurable: true },
+		spriteY: { get: function(){ return this._spriteCacheIndex ? BattleManager._spriteList[this._spriteCacheIndex].y : 0; }, configurable: true },
 	});
 	$$.Sprite_Battler_update = Sprite_Battler.prototype.update;
 	Sprite_Battler.prototype.update = function()
@@ -310,8 +310,16 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 	$$.Sprite_Battler_setBattler = Sprite_Battler.prototype.setBattler;
 	Sprite_Battler.prototype.setBattler = function(battler)
 	{
+		BattleManager._spriteList = BattleManager._spriteList || {};
 		$$.Sprite_Battler_setBattler.call(this, battler);
-		if (battler) battler.setSprite(this);
+		if (battler)
+		{
+			var value = (battler.isEnemy() ? 100000 : 200000) + battler.friendsUnit().members().indexOf(battler);
+			BattleManager._spriteList[value] = this;
+			battler.setSprite(value);
+			console.log(battler);
+			console.log(value);
+		}
 	}
 	Sprite_Battler.prototype.initGauges = function()
 	{
