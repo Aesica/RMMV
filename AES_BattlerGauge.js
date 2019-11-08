@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattlerGauge = true;
 var Aesica = Aesica || {};
 Aesica.BattlerGauge = Aesica.BattlerGauge || {};
-Aesica.BattlerGauge.version = 1.41;
+Aesica.BattlerGauge.version = 1.42;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battlerGaugeVersion = 1.2;
 /*:
-* @plugindesc v1.41 Add gauges to actors or enemies during battle
+* @plugindesc v1.42 Add gauges to actors or enemies during battle
 * @author Aesica
 *
 * @param Player Gauge Width
@@ -317,8 +317,6 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 			var value = (battler.isEnemy() ? 100000 : 200000) + battler.friendsUnit().members().indexOf(battler);
 			BattleManager._spriteList[value] = this;
 			battler.setSprite(value);
-			console.log(battler);
-			console.log(value);
 		}
 	}
 	Sprite_Battler.prototype.initGauges = function()
