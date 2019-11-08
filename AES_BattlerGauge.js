@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattlerGauge = true;
 var Aesica = Aesica || {};
 Aesica.BattlerGauge = Aesica.BattlerGauge || {};
-Aesica.BattlerGauge.version = 1.3;
+Aesica.BattlerGauge.version = 1.4;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battlerGaugeVersion = 1.2;
 /*:
-* @plugindesc v1.3 Add gauges to actors or enemies during battle
+* @plugindesc v1.4 Add gauges to actors or enemies during battle
 * @author Aesica
 *
 * @param Player Gauge Width
@@ -187,7 +187,7 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 			result.colorCharge2 = Yanfly.Param.ATBColorChar2;
 		}
 		return result;
-	})(Imported.YEP_X_BattleSysATB && String($$.pluginParameters["ATB Gauge"]).toLowerCase() === "false" ? false : true);
+	})(!!Imported.YEP_X_BattleSysATB && (String($$.pluginParameters["ATB Gauge"]).toLowerCase() === "false" ? false : true));
 	$$.params.gauges = (function(value)
 	{
 		var result = [];
@@ -292,17 +292,32 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 	{
 		return this.isAlive();
 	}
+	Game_Battler.prototype.setSprite = function(sprite)
+	{
+		this._sprite = sprite;
+	}
+	Object.defineProperties(Game_Battler.prototype, 
+	{
+		spriteX: { get: function(){ return this._sprite ? this._sprite.x : 0; }, configurable: true },
+		spriteY: { get: function(){ return this._sprite ? this._sprite.y : 0; }, configurable: true },
+	});
 	$$.Sprite_Battler_update = Sprite_Battler.prototype.update;
 	Sprite_Battler.prototype.update = function()
 	{
 		$$.Sprite_Battler_update.call(this);
 		this.initGauges();
 	}
+	$$.Sprite_Battler_setBattler = Sprite_Battler.prototype.setBattler;
+	Sprite_Battler.prototype.setBattler = function(battler)
+	{
+		$$.Sprite_Battler_setBattler.call(this, battler);
+		if (battler) battler.setSprite(this);
+	}
 	Sprite_Battler.prototype.initGauges = function()
 	{
 		if (this._battler && !this._gaugeExists)
 		{
-			if ((this._battler.isEnemy() && $$.params.enemyGaugeWidth > 0) || (this._battler.isActor() && $$.params.playerGaugeWidth > 0))
+			if ((this._battler.isEnemy() && $$.params.enemyGaugeWidth > 0) || (this._battler.isActor() && $$.params.playerGaugeWidth > 0 && $gameSystem.isSideView()))
 			{
 				this._battlerGauge = new Window_BattlerGauge();
 				this._battlerGauge.linkBattler(this._battler);
@@ -384,8 +399,8 @@ Aesica.Toolkit.battlerGaugeVersion = 1.2;
 	}
 	Window_BattlerGauge.prototype.updatePosition = function()
 	{
-		this.x = this._battler.spritePosX() - this.width * 0.5;
-		this.y = this._battler.spritePosY() + ($$.params.position ? -this._battler.spriteHeight() - this.height : 0) + $$.params.yOffset;
+		this.x = this._battler.spriteX - this.width * 0.5;
+		this.y = this._battler.spriteY + ($$.params.position ? -this._battler.spriteHeight() - this.height : 0) + $$.params.yOffset;
 	}
 	Window_BattlerGauge.prototype.updateContents = function()
 	{
