@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 2.03;
+Aesica.BattleCore.version = 2.1;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.battleCoreVersion = 1.1;
 /*:
-* @plugindesc v2.03 Contains several enhancements for various combat aspects of RMMV.
+* @plugindesc v2.1 Contains several enhancements for various combat aspects of RMMV.
 *
 * @author Aesica
 *
@@ -258,10 +258,14 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * tweak your formula in one place instead of having to go through every skill
 * or item individually.
 *
-* Minimum and Maximum Damage Caps
+* <Damage Min: x>
+* <Damage Max: x>
+* <Break Damage Cap>
 * Allows you to set minimum and maximum damage caps.  For example, if you want
 * all attacks to deal at least 1 point of damage, but no more than 9999 damage,
-* you can use these settings to achieve that.
+* you can use these settings and note tags to achieve that.  The note tags can
+* be placed on actors/enemies, classes, equips, and states.  The highest value
+* for min and max gets priority... xxx
 *
 * <Critical Bonus: n>
 * In addition to being able to change the default critical modifier, individual
@@ -553,14 +557,20 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 		Game_Action.prototype.makeDamageValue = function(target, critical)
 		{
 			var iReturn = $$.Game_Action_makeDamageValue.call(this, target, critical);
-			var cap = $$.params.maxDamage;
-			return $$.applyDamageCap(iReturn, cap);
+			return this.applyDamageCap(iReturn);
 		}
-		$$.applyDamageCap = function(damage, customCap)
+		Game_Action.prototype.applyDamageCap = function(damage)
 		{
-			var iReturn = Math.max($$.params.minDamage, Math.abs(damage));
-			customCap = $$.params.maxDamage;
-			if (customCap) iReturn = Math.min(customCap, iReturn);
+			var subject = this.subject();
+			var minOverride = subject.getTag("Damage Min", true).reduce((a, b) => Math.max(+a || 0, +b || 0), 0);
+			var maxOverride = subject.getTag("Damage Max", true).reduce((a, b) => Math.max(+a || 0, +b || 0), 0);
+			minOverride = Math.max(+Aesica.Toolkit.getTag.call(this.item(), "Damage Min") || 0, minOverride);
+			maxOverride = Math.max(+Aesica.Toolkit.getTag.call(this.item(), "Damage Max") || 0, maxOverride);
+			var min = minOverride || $$.params.minDamage;
+			var max = maxOverride || $$.params.maxDamage;
+			var breakMaxCap = Aesica.Toolkit.getTag.call(this.item(), "Break Damage Cap") || subject.getTag("Break Damage Cap", true).length > 0 || max === 0;
+			var iReturn = Math.max(min, Math.abs(damage));
+			if (!breakMaxCap) iReturn = Math.min(Math.max(min, max), iReturn);
 			if (damage < 0) iReturn *= -1;
 			return iReturn;
 		}
