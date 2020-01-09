@@ -192,7 +192,7 @@ Info:  Adds a few useful escape codes to the engine's messaging system
 - \\eval\<\<\<code\>\>\> Use javascript functions to display just about anything
 - \\pluginCommand\<\<\<command\>\>\> Execute plugin commands mid-dialog
 - \\name[x] and \\name Store a name and then retrieve it for later use in multiple dialog pages
-- \\face[name, index] Store a face and then retrieve it for later use in multiple dialog pages
+- \\face[name, index] and \\face Store a face and then retrieve it for later use in multiple dialog pages
 - \\et[eid, tag] Display a note tag on a specific event
 
 ----------------------------------------------------------------------------------------------------------------------
