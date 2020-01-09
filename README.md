@@ -73,6 +73,11 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Able to alter the color and opacity of the battle log window
 - Certain skills can be set to not display action text (or their name if using YEP_BattleEngineCore) via note tag
 
+**1/8/2020 - 2.1**
+- **If using AES_RaceCore, it needs to be updated to v1.6 in order to continue functioning with this plugin**
+- Added note tag support for damage min/max caps.  These tags can be applied to actors/enemies, classes, equips, states, and skills/items
+- Added a <Break Damage Cap> note tag for actors/enemies, classes, equips, states, and skills/items
+
 **8/20/2019 - 2.0**
 - Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.
 - Removed all of the "command control" functions (unleash, attack replace, guard state, disable attack/guard/item, etc).  Those effects now have their own plugin.
@@ -116,17 +121,6 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 
 ----------------------------------------------------------------------------------------------------------------------
 
-### AES_CommandControl
-Info:  Gives you more control over the various actor commands and such
-- Can enable/disable Attack/Guard/Item, both by default and individually by note tags
-- Can replace basic attack with another skill, optionally with conditional requirements
-- Allows for condition-based attack unleash effects
-- In addition to the default Guard state, guarding can grant additional states to either the user, their party, or both
-- Can add individual skills as actor commands
-- Features a basic limit break system that utilizes TP
-
-----------------------------------------------------------------------------------------------------------------------
-
 ### AES_BattlerGauge (formerly AES_EnemyGauge)
 Info:  Adds gauges above/beneath actors/enemies for various stats (hp, mp, tp, etc)
 - Hide specific gauges for specific foes
@@ -142,6 +136,17 @@ Info:  Adds gauges above/beneath actors/enemies for various stats (hp, mp, tp, e
 
 **9/26/2019 - 1.3**
 - Fixed an obscure bug that could cause a crash when fleeing a battle when an enemy (and/or possibly actor) is charging a skill.  Only applies to the ATB gauge.
+
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_CommandControl
+Info:  Gives you more control over the various actor commands and such
+- Can enable/disable Attack/Guard/Item, both by default and individually by note tags
+- Can replace basic attack with another skill, optionally with conditional requirements
+- Allows for condition-based attack unleash effects
+- In addition to the default Guard state, guarding can grant additional states to either the user, their party, or both
+- Can add individual skills as actor commands
+- Features a basic limit break system that utilizes TP
 
 ----------------------------------------------------------------------------------------------------------------------
 
@@ -182,6 +187,15 @@ Info:  Allows extra customizations for MP
 to the plugin documentation.  (so a.mpA in the damage formula box)
 
 ----------------------------------------------------------------------------------------------------------------------
+### AES_MessageExt
+Info:  Adds a few useful escape codes to the engine's messaging system
+- \\eval<<<code>>> Use javascript functions to display just about anything
+- \\pluginCommand<<<command>>> Execute plugin commands mid-dialog
+- \\name[x] and \\name Store a name and then retrieve it for later use in multiple dialog pages
+- \\face[name, index] Store a face and then retrieve it for later use in multiple dialog pages
+- \\et[eid, tag] Display a note tag on a specific event
+
+----------------------------------------------------------------------------------------------------------------------
 
 ### AES_Autosave
 Info:  Adds autosaving to your game via plugin command
@@ -205,6 +219,9 @@ Info:  Adds races and racial modifiers to your game's battle system
 - Damage vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Defense vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Function to retrieve the name of the target's race
+
+**1/8/2020 - 1.6**
+- Compatibility update for AES_BattleCore v2.1 and above
 
 **5/8/2019 - 1.5**
 - Fixed a bug that was causing crashes in some cases
