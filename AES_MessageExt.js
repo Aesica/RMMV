@@ -126,14 +126,6 @@ Aesica.Toolkit.messageExtVersion = 1.1;
 */
 (function($$)
 {
-	$$.Test = Game_Interpreter.prototype.pluginCommand;
-	Game_Interpreter.prototype.pluginCommand = function(command, args)
-	{
-		$$.Test.call(this, command, args);
-		console.log(args);
-		if (command.toLowerCase() === "test") console.log(command + ": " + args.join(" "));
-	}
-	
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/
