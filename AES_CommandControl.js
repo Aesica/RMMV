@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CommandControl = true;
 var Aesica = Aesica || {};
 Aesica.CommandControl = Aesica.CommandControl || {};
-Aesica.CommandControl.version = 1.0;
+Aesica.CommandControl.version = 1.2;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.commandControlVersion = 1.1;
 /*:
-* @plugindesc v1.0 Gain a greater level of control over actor battle commands.
+* @plugindesc v1.2 Gain a greater level of control over actor battle commands.
 *
 * @author Aesica
 *
@@ -50,6 +50,16 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * @off Hide
 * @default true
 *
+* @param Left Command List
+* @desc List of commands to be shown when the player presses left in the actor command window
+* @type text[]
+* @default []
+*
+* @param Right Command List
+* @desc List of commands to be shown when the player presses right in the actor command window
+* @type text[]
+* @default []
+*
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
 * Support me on Patreon:  https://www.patreon.com/aesica
@@ -89,17 +99,34 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * Additionally, these commands can be enabled (or disabled) on an individual
 * basis using note tags:
 *
-* <Command Attack: Show>
-* <Command Guard: Hide>
-* <Command Item: Hide>
+* <Attack Command: Show>
+* <Guard Command: Hide>
+* <Item Command: Hide>
 * ...etc
 *
 * These tags can be added to actors, classes, equips, and states in that order.
-* Thus, an actor with <Command Guard: Hide> won't have the guard command 
+* Thus, an actor with <Guard Command: Hide> won't have the guard command 
 * available even if it's enabled on everyone else by default.  He can, however,
-* equip a shield with <Command Guard: Show> and gain access to guard.  He can
+* equip a shield with <Guard Command: Show> and gain access to guard.  He can
 * even use guard if guard is disabled by default for everyone else.
 * 
+* ----------------------------------------------------------------------
+* Relocate commands to left/right submenus
+* ----------------------------------------------------------------------
+* Allows certain commands to be moved to a special sub-command menu, accessed
+* when the player presses left or right on their keyboard/controller.  These
+* commands can be set in either the plugin parameters or, for single skill
+* commands, the following note tag can be placed directly on the skill itself:
+*
+* <Command Page: Left>
+* <Command Page: Right>
+*
+* Note 1:  Attack and Guard count as single skill commands and thus can make
+* use of this note tag.
+*
+* Note 2:  This system is currently NOT touch-friendly, so any game intended
+* for touch devices should probably not make use of this feature.
+*
 * ----------------------------------------------------------------------
 * Limit Breaks
 * ----------------------------------------------------------------------
@@ -210,6 +237,22 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 */
 (function($$)
 {
+	function processList(args)
+	{
+		var result;
+		args = args.toLowerCase();
+		try
+		{
+			result = JSON.parse(args);
+		}
+		catch(e)
+		{
+			result = [];
+			console.log("AES_CommandContro:  Error parsing plugin paramters:")
+			console.log(args);
+		}
+		return result;
+	}
 	$$.pluginParameters = PluginManager.parameters("AES_CommandControl");
 	$$.params = {};
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
@@ -218,6 +261,8 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableGuard = String($$.pluginParameters["Enable Guard"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableItem = String($$.pluginParameters["Enable Item"]).toLowerCase() === "false" ? false : true;
+	$$.params.leftCommandList = processList(String($$.pluginParameters["Left Command List"]))
+	$$.params.rightCommandList = processList(String($$.pluginParameters["Right Command List"]))
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/
@@ -286,6 +331,15 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		this._actorCommandWindow.setHandler("cancel", this.selectPreviousCommand.bind(this));
 		this.addWindow(this._actorCommandWindow);
 	}
+	$$.Window_ActorCommand_createAllParts = Window_ActorCommand.prototype._createAllParts;
+	Window_ActorCommand.prototype._createAllParts = function()
+	{
+		$$.Window_ActorCommand_createAllParts.call(this);
+		this._leftArrowSprite = new Sprite();
+		this._rightArrowSprite = new Sprite();
+		this.addChild(this._leftArrowSprite);
+		this.addChild(this._rightArrowSprite);
+	}
 	Scene_Battle.prototype.commandSingleSkill = function()
 	{
 		var skill = $dataSkills[this._actorCommandWindow.currentExt()];
@@ -293,21 +347,25 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		BattleManager.actor().setLastBattleSkill(skill);
 		this.onSelectAction();
 	}
-	Game_Actor.prototype.commandEnabled = function(command, enabledByDefault) 
+	$$.Window_ActorCommand_setup = Window_ActorCommand.prototype.setup;
+	Window_ActorCommand.prototype.setup = function(actor)
 	{
-		var result = this.getTag(command + " command", true);
-		result = result.length > 0 ? result[result.length - 1] : (enabledByDefault ? "show" : "hide");
-		return result.match(/hide/i) ? false : true;
+		this._commandPage = 0;
+		this._leftCommandMax = 0;
+		this._rightCommandMax = 0;
+		$$.Window_ActorCommand_setup.call(this, actor);
 	}
 	Window_ActorCommand.prototype.makeCommandList = function()
 	{
 		var attackMode, guardMode, itemMode;
+		var activeList = [];
+		var inactiveList = [];
 		if (this._actor)
 		{
-			attackMode = this._actor.commandEnabled("attack", $$.params.enableAttack);
-			guardMode = this._actor.commandEnabled("guard", $$.params.enableGuard);
-			itemMode = this._actor.commandEnabled("item", $$.params.enableItem);
-			if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill()) this.addLimitCommand();
+			attackMode = this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(this._actor.attackSkillId()) === this._commandPage;
+			guardMode = this._actor.commandEnabled("guard", $$.params.enableGuard) && this.commandListId(this._actor.guardSkillId()) === this._commandPage;
+			itemMode = this._actor.commandEnabled("item", $$.params.enableItem) && this.commandListId(TextManager.item) === this._commandPage;
+			if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId(this._actor.attackSkillId()) === this._commandPage) this.addLimitCommand();
 			else if (attackMode) this.addAttackCommand();
 			if ($$.params.singleSkillCommandOrder)
 			{
@@ -322,6 +380,59 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			if (guardMode) this.addGuardCommand();
 			if (itemMode) this.addItemCommand();
 		}
+	}
+	Window_ActorCommand.prototype.commandListId = function(skillId)
+	{
+		var result = 0;
+		var skill = typeof skillId === "number" ? $dataSkills[skillId] : null;
+		var skillName = (skill ? skill.name : skillId).toLowerCase();
+		var skillTag;
+		if (skillName)
+		{
+			if ($$.params.rightCommandList.contains(skillName)) result = 1;
+			else if ($$.params.leftCommandList.contains(skillName)) result = -1;
+			if (skill)
+			{
+				skillTag = Aesica.Toolkit.getTag.call(skill, "Command Page");
+				if (String(skillTag).toLowerCase() === "right") result = 1;
+				else if (String(skillTag).toLowerCase() === "left") result = -1;
+			}
+			if (!this._leftCommandMax && result === -1) this._leftCommandMax = -1;
+			if (!this._rightCommandMax && result === 1) this._rightCommandMax = 1;
+		}
+		return result;
+	}
+	$$.Window_ActorCommand_refreshArrows = Window_ActorCommand.prototype._refreshArrows;
+	Window_ActorCommand.prototype._refreshArrows = function()
+	{
+		$$.Window_ActorCommand_refreshArrows.call(this);
+		var w = this._width;
+		var h = this._height;
+		var rect = {"x":119, "y":39, "width":16, "height":30, "halfWidth": 8};		
+		this._leftArrowSprite.bitmap = this._windowskin;
+		this._leftArrowSprite.anchor.x = 0.5;
+		this._leftArrowSprite.anchor.y = 0.5;
+		this._leftArrowSprite.setFrame(rect.x, rect.y, rect.width, rect.height);
+		this._leftArrowSprite.move(rect.halfWidth, h * 0.5);
+		this._rightArrowSprite.bitmap = this._windowskin;
+		this._rightArrowSprite.anchor.x = 0.5;
+		this._rightArrowSprite.anchor.y = 0.5;
+		this._rightArrowSprite.setFrame(rect.x + 34, rect.y, rect.width, rect.height);
+		this._rightArrowSprite.move(w - rect.halfWidth, h * 0.5);
+	}
+	$$.Window_ActorCommand_updateArrows = Window_ActorCommand.prototype._updateArrows;
+	Window_ActorCommand.prototype._updateArrows = function()
+	{
+		$$.Window_ActorCommand_updateArrows.call(this);
+		this._leftArrowSprite.visible = this.isOpen() && this.leftArrowVisible;
+		this._rightArrowSprite.visible = this.isOpen() && this.rightArrowVisible;
+	}
+	$$.Window_Selectable_drawAllItems = Window_Selectable.prototype.drawAllItems;
+	Window_Selectable.prototype.drawAllItems = function()
+	{
+		this.leftArrowVisible = this._commandPage > this._leftCommandMax;
+		this.rightArrowVisible = this._commandPage < this._rightCommandMax;
+		$$.Window_Selectable_drawAllItems.call(this);
 	}
 	$$.Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
 	Window_ActorCommand.prototype.addAttackCommand = function()
@@ -367,7 +478,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			for (i in commandList)
 			{
 				skillId = +commandList[i]
-				if (skillId)
+				if (skillId && this.commandListId(skillId) === this._commandPage)
 				{
 					canUse = battler.canUse($dataSkills[skillId]);
 					this.addCommand($dataSkills[skillId].name, "singleSkill", canUse, skillId);
@@ -375,6 +486,56 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			}
 		}
 	}
+	Window_ActorCommand.prototype.addSkillCommands = function()
+	{
+		var skillTypes = this._actor.addedSkillTypes();
+		skillTypes.sort(function(a, b) {
+			return a - b;
+		});
+		skillTypes.forEach(function(stypeId)
+		{
+			var name = $dataSystem.skillTypes[stypeId];
+			if (this.commandListId(name) === this._commandPage) this.addCommand(name, 'skill', true, stypeId);
+		}, this);
+	}	
+	Window_ActorCommand.prototype.addLimitCommand = function()
+	{
+		this.addCommand($dataSystem.skillTypes[$$.params.limitCommand], 'skill', true, $$.params.limitCommand);
+	}
+	Window_ActorCommand.prototype.cursorLeft = function()
+	{
+		this._commandPage--;
+		if (this._commandPage < this._leftCommandMax) this._commandPage = this._leftCommandMax;
+		else
+		{		
+			SoundManager.playCursor();
+			this.updateCommandList();
+		}
+	}
+	Window_ActorCommand.prototype.cursorRight = function()
+	{
+		this._commandPage++;
+		if (this._commandPage > this._rightCommandMax) this._commandPage = this._rightCommandMax;
+		else
+		{		
+			SoundManager.playCursor();
+			this.updateCommandList();
+		}
+	}	
+	Window_ActorCommand.prototype.updateCommandList = function()
+	{
+		this.clearCommandList();
+		this.refresh();
+		this.select(0);
+		this.activate();		
+	}
+	Game_Actor.prototype.commandEnabled = function(command, enabledByDefault) 
+	{
+		var result = this.getTag(command + " command", true);
+		result = result.length > 0 ? result[result.length - 1] : (enabledByDefault ? "show" : "hide");
+		return result.match(/hide/i) ? false : true;
+	}
+
 	Game_BattlerBase.prototype.attackSkillId = function()
 	{
 		return this._attackSkillReplaceID || 1;
@@ -415,10 +576,6 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			x = +stateListAll[i];
 			if (x) for (j in targetParty) targetParty[j].addState(x);
 		}
-	}
-	Window_ActorCommand.prototype.addLimitCommand = function()
-	{
-		this.addCommand($dataSystem.skillTypes[$$.params.limitCommand], 'skill', true, $$.params.limitCommand);
 	}
 /**-------------------------------------------------------------------	
 	Skill Unleash
