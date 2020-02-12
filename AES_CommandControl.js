@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CommandControl = true;
 var Aesica = Aesica || {};
 Aesica.CommandControl = Aesica.CommandControl || {};
-Aesica.CommandControl.version = 1.2;
+Aesica.CommandControl.version = 1.25;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.commandControlVersion = 1.1;
 /*:
-* @plugindesc v1.2 Gain a greater level of control over actor battle commands.
+* @plugindesc v1.25 Gain a greater level of control over actor battle commands.
 *
 * @author Aesica
 *
@@ -59,6 +59,10 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * @desc List of commands to be shown when the player presses right in the actor command window
 * @type text[]
 * @default []
+*
+* @param Hidden Skill Commands
+* @desc List of skill command IDs that won't be displayed in combat, each separated by a space
+* @type text
 *
 * @help
 * For terms of use, see:  https://github.com/Aesica/RMMV/blob/master/README.md
@@ -261,8 +265,9 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableGuard = String($$.pluginParameters["Enable Guard"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableItem = String($$.pluginParameters["Enable Item"]).toLowerCase() === "false" ? false : true;
-	$$.params.leftCommandList = processList(String($$.pluginParameters["Left Command List"]))
-	$$.params.rightCommandList = processList(String($$.pluginParameters["Right Command List"]))
+	$$.params.leftCommandList = processList(String($$.pluginParameters["Left Command List"])) || [];
+	$$.params.rightCommandList = processList(String($$.pluginParameters["Right Command List"])) || [];
+	$$.params.hiddenSkillCommands = String($$.pluginParameters["Hidden Skill Commands"]).split(" ").map(x => +x || 0);
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/
@@ -495,7 +500,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		skillTypes.forEach(function(stypeId)
 		{
 			var name = $dataSystem.skillTypes[stypeId];
-			if (this.commandListId(name) === this._commandPage) this.addCommand(name, 'skill', true, stypeId);
+			if (this.commandListId(name) === this._commandPage && !$$.params.hiddenSkillCommands.contains(stypeId)) this.addCommand(name, 'skill', true, stypeId);
 		}, this);
 	}	
 	Window_ActorCommand.prototype.addLimitCommand = function()
