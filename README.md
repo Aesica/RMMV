@@ -28,8 +28,6 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Case-insensitive note tag parsing functions
 - Plugin commands to give players an item/gold, play a sound, and display a message in a uniform, consistent way
 - Execution of plugin commands via script calls using the same syntax format as a standard plugin command
-- Patch to fix the "Possessed" counter error in shops by including equipped items
-- Customize default multiplier for item sell prices
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
 
