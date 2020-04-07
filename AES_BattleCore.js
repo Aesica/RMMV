@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_BattleCore = true;
 var Aesica = Aesica || {};
 Aesica.BattleCore = Aesica.BattleCore || {};
-Aesica.BattleCore.version = 2.1;
+Aesica.BattleCore.version = 2.2;
 Aesica.Toolkit = Aesica.Toolkit || {};
-Aesica.Toolkit.battleCoreVersion = 1.1;
+Aesica.Toolkit.battleCoreVersion = 1.4;
 /*:
 * @plugindesc v2.1 Contains several enhancements for various combat aspects of RMMV.
 *
@@ -135,19 +135,26 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * <Note>value > 5</Note>  Eval:  "value > 5" (good)
 * <Note: value > 5>       Eval:  "value "    (bad)
 *
-* There's also a parameter-based note tag syntax used by some functions that's
-* formatted similarly to standard HTML parameters:
-* <Note: name="Aesica" class="Programmer">
+* There's also a list-based note tag syntax used by some functions that
+* consists of key/value pairs and multiple lines:
+* <People>
+* name: "Aesica" job: "Programmer"
+* name: "Acisea" job: "Evil Twin"
+* </People>
 *
 * Multiple groups of parameter sets in this format are separated by a
-* semicolon.  Also, the order each parameter appears in does not matter, and
+* linebreak.  Also, the order each parameter appears in does not matter, and
 * certain parameters can be omitted entirely when specified:
-* <Note: name="Fido" pet="Dog"; pet="Cat" name="Socks"; pet="Potato">
-* 
-* Double-quotes are required for parameter values, thus:
-* <Note: name="Aesica"> // Good
-* <Note: name='Aesica'> // Bad and will probably vomit errors
-* <Note: name=Aesica>   // Bad and will probably vomit errors
+* <Pets>
+* name: "Fido" pet: "Dog"
+* pet: "Cat" name: "Socks"
+* pet: "Potato"
+* </Pets>
+*
+* Double quotes are required for parameter values, thus:
+* name: "Aesica"> // Good
+* name: 'Aesica'> // Not parsed
+* name: Aesica>   // not parsed
 *
 * List of crap this plugin can do:
 *
@@ -168,13 +175,17 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * armors, and states.
 *
 * Note that each zone can have multiple effects, with each group of effects
-* being separated by a semicolon (;).  The value for each property must be 
+* being separated by a line break.  The value for each property must be 
 * enclosed in double quotes (")
 *
 * To set zone effects for a particular zone, apply the following note tag
 * to the zone's note box:
 *
-* <Zone Effect: paramSet1; paramSet2; ...etc>
+* <Zone Effect>
+* paramSet1
+* paramSet2
+* ...etc
+* </Zone Effect>
 *
 * Replace "paramSetn" with one or more of the following parameters:
 *
@@ -207,39 +218,61 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * immunity effects/items/etc apply.
 *
 * Multiple groups of states/conditions/animations can be separated by a
-* semicolon (;)
+* line break
 *
 * Example uses:
 *
-* <Zone Effect: damage="(500 - target.mdf) * target.elementRate(2)">
+* <Zone Effect>
+* damage: "(500 - target.mdf) * target.elementRate(2)"
+* </Zone Effect>
 * Deals 500 damage to all targets, reduced by their mdf and adjusted by
 * their element rate for element ID 2.
 *
-* <Zone Effect: damage="100 * target.mdr">
+* <Zone Effect>
+* damage: "100 * target.mdr"
+* </Zone Effect>
 * Deals 100 damage to the target that is modified by the target's magical
 * damage rate.
 *
-* <Zone Effect: state="5">
+* <Zone Effect>
+* state: "5"
+* </Zone Effect>
 * Applies state 5 to all targets.
 *
-* <Zone Effect: state="5" target="party">
+* <Zone Effect>
+* state: "5" target: "party"
+* </Zone Effect>
 * Applies state 5 to the party side only.
 *
-* <Zone Effect: state="1" immune="Oxygen Tank">
+* <Zone Effect>
+* state: "1" immune: "Oxygen Tank">
+* </Zone Effect>
 * Kills all target without an <Oxygen Tank> note tag.
 *
-* <Zone Effect: animation="23" target="party">
+* <Zone Effect>
+* animation: "23" target:"party"
+* </Zone Effect>
 * Plays animation 23 on the party when invoked, nothing more.
 *
-* <Zone Effect: state="5, 6" weakness="Metallic Armor">
+* <Zone Effect>
+* state: "5, 6" weakness: "Metallic Armor"
+* </Zone Effect>
 * Applies states 5 and 6 to any target with the <Metallic Armor> tag.
 *
-* <Zone Effect: state="5" animation="23"; state="7" immune="Blessing">
+* <Zone Effect
+* state: "5" animation: "23"
+* state: "7" immune: "Blessing"
+* </Zone Effect>
 * Applies state 5 to all targets and plays animation 23 on each, and any
 * target without the <Blessing> note tag will also be affected by state 7.
 * 
-* <Zone Effect: state="5" target="troop">
-* <Zone Effect: target="troop" states="5">
+* <Zone Effect
+* state: "5" target: "troop"
+* </Zone Effect>
+*   -or-
+* <Zone Effect
+* target: "troop" states: "5"
+* </Zone Effect>
 * Both are exactly the same and will apply state 5 to the enemy side only.
 * 
 * ----------------------------------------------------------------------
@@ -319,6 +352,15 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * Allows you to apply a variance to a damage or healing result, although in 
 * most cases, this is done for you via the formula box
 *
+* Game_BattlerBase.prototype.incrementState(n)
+* If the target is affected by state n, it will be switched to the state specified
+* in the note tag <Next State: x> if it exists.
+* 
+* Game_BattlerBase.prototype.incrementStates(...stateIds)
+* Cycles through a battler's states, and any specified in the stateIds list with
+* the note tag <Next State: x> will be switched to the specified state.  If no
+* stateids are specified, then all states currently on the battler will be checked.
+*
 * Game_BattlerBase.prototype.weaponMhp
 * Game_BattlerBase.prototype.weaponMmp
 * Game_BattlerBase.prototype.weaponAtk
@@ -364,6 +406,18 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * a.alltateAffected(3, 14)
 * b.allStateAffected(27, 28, 29, 41, 47)
 *
+* Game_Unit.prototype.numAnyStateAffected(1, 2, 3, 27, ...etc)
+* Returns the number of battlers in the specified unit affected by any of the
+* listed states.  Examples:
+* $gameParty.numAnyStateAffected(2, 3, 5)
+* $gameTroop.numAnyStateAffected(8, 9)
+*
+* Game_Unit.prototype.numAllStateAffected(1, 2, 3, 27, ...etc)
+* Returns the number of battlers in the specified unit affected by all of the
+* listed states.  Examples:
+* $gameParty.numAllStateAffected(2, 3, 5)
+* $gameTroop.numAllStateAffected(8, 9)
+*
 * Here's some sample damage formula box applications of these various functions:
 *
 * Aesica.BattleCore.damage(a.atk, 5, b.def)
@@ -404,6 +458,19 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 * b.allStateAffected(4, 5, 6, 7, 8, 9, 10) ? 5000 : 1
 * // If b is affected by state 4, 5, 6, 7, 8, 9, AND 10, deal 5000 damage.
 * // Otherwise only deal 1 damage.
+*
+* b.incrementStates()
+* // Cycles through b's states, and if any have a note tag indicating a next state:
+* // <Next State: n>
+* // Then that state will be removed and replaced by state n.
+*
+* b.incrementStates(12, 13)
+* // States 12 and 13 (if either or both are present) will be replaced by whatever
+* // state is specified in their note tags:
+* // <Next State: 22> (on state 12, will be replaced by state 22)
+* // <Next State: 23> (on state 13, will be replaced by state 23)
+* // <Next State: 24> (on state 14, will not be replaced since it wasn't in the 
+* //   stateIds list)
 */
 (function($$)
 {
@@ -454,21 +521,25 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 			var note = this.note || "";
 			return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
 		}
-		Aesica.Toolkit.parseTagData = function(tagData)
+		Aesica.Toolkit.getTagList = function(tag)
 		{
-			tagData = tagData.split(";");
-			var oUnit, aList = [];
-			var match, rx = /([A-Za-z0-9]+)="([^"]+)"/gi;
-			for (i in tagData)
+			var tagData = Aesica.Toolkit.getTag.call(this, tag)
+			var unit, rx, match, result = [];
+			if (tagData)
 			{
-				oUnit = {};
-				while (match = rx.exec(tagData[i]))
+				tagData = tagData.split("\n");
+				rx = /([A-Za-z0-9]+):[ ]*"([^"]+)"/gi;
+				for (i in tagData)
 				{
-					oUnit[match[1]] = match[2];
+					unit = {};
+					while (match = rx.exec(tagData[i]))
+					{
+						unit[match[1]] = isNaN(+match[2]) ? match[2].trim() : +match[2];
+					}
+					result[i] = unit;
 				}
-				aList[i] = oUnit;
 			}
-			return aList;
+			return result;
 		}	
 		Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 		{
@@ -490,6 +561,22 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 			}
 			return deepScan ? value : (value[0] ? value[0] : false);
 		}
+		Aesica.Toolkit.hexColorMath = function(hexColor, mathEval)
+		{
+			hexColor = hexColor.replace(/[^0-9A-Fa-f]*/gi, "");
+			if (hexColor.length < 6) hexColor = hexColor[0] + hexColor[0] + hexColor[1] + hexColor[1] + hexColor[2] + hexColor[2];
+			hexColor = hexColor.split("")
+			hexColor = [hexColor[0] + hexColor[1], hexColor[2] + hexColor[3], hexColor[4] + hexColor[5]];
+			var current, result = "";
+			for (i in hexColor)
+			{
+				current = Math.floor(eval((+("0x" + hexColor[i]) || 0) + mathEval)).toString(16);
+				if (current.length < 2) current = "0" + current;
+				else if (current.length > 2) current = "ff";
+				result += current;
+			}
+			return "#" + result;
+		}		
 	}
 /**-------------------------------------------------------------------	
 	Damage/Healing formulas and Battler functions
@@ -562,15 +649,15 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 		Game_Action.prototype.applyDamageCap = function(damage)
 		{
 			var subject = this.subject();
-			var minOverride = subject.getTag("Damage Min", true).reduce((a, b) => Math.max(+a || 0, +b || 0), 0);
-			var maxOverride = subject.getTag("Damage Max", true).reduce((a, b) => Math.max(+a || 0, +b || 0), 0);
+			var minOverride = subject.minDamage;
+			var maxOverride = subject.maxDamage;
 			minOverride = Math.max(+Aesica.Toolkit.getTag.call(this.item(), "Damage Min") || 0, minOverride);
 			maxOverride = Math.max(+Aesica.Toolkit.getTag.call(this.item(), "Damage Max") || 0, maxOverride);
 			var min = minOverride || $$.params.minDamage;
 			var max = maxOverride || $$.params.maxDamage;
 			var breakMaxCap = Aesica.Toolkit.getTag.call(this.item(), "Break Damage Cap") || subject.getTag("Break Damage Cap", true).length > 0 || max === 0;
-			var iReturn = Math.max(min, Math.abs(damage));
-			if (!breakMaxCap) iReturn = Math.min(Math.max(min, max), iReturn);
+			if (breakMaxCap) max = Infinity;
+			var iReturn = Math.abs(damage).clamp(min, max);
 			if (damage < 0) iReturn *= -1;
 			return iReturn;
 		}
@@ -598,7 +685,17 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 			weaponMdf: { get: function(){ return this.weaponStat(5); }, configurable: true },
 			weaponAgi: { get: function(){ return this.weaponStat(6); }, configurable: true },
 			weaponLuk: { get: function(){ return this.weaponStat(7); }, configurable: true },
-		});		
+			unarmedMhp: { get: function(){ return this.mhp - this.weaponStat(0); }, configurable: true },
+			unarmedMmp: { get: function(){ return this.mmp - this.weaponStat(1); }, configurable: true },
+			unarmedAtk: { get: function(){ return this.atk - this.weaponStat(2); }, configurable: true },
+			unarmedDef: { get: function(){ return this.def - this.weaponStat(3); }, configurable: true },
+			unarmedMat: { get: function(){ return this.mat - this.weaponStat(4); }, configurable: true },
+			unarmedMdf: { get: function(){ return this.mdf - this.weaponStat(5); }, configurable: true },
+			unarmedAgi: { get: function(){ return this.agi - this.weaponStat(6); }, configurable: true },
+			unarmedLuk: { get: function(){ return this.luk - this.weaponStat(7); }, configurable: true },
+			minDamage: { get: function(){ return this.getTag("Damage Min", true).reduce((a, b) => Math.max(+a || 0, +b || 0), 0) || $$.params.minDamage; }, configurable: true },
+			maxDamage: { get: function(){ return this.getTag("Damage Max", true).reduce((a, b) => Math.max(+a || 0, +b || 0), 0) || $$.params.maxDamage || Infinity; }, configurable: true }
+		});
 		Game_BattlerBase.prototype.weaponStat = function(statId)
 		{
 			var params = ["mhp","mmp","atk","def","mat","mdf","agi","luk"];
@@ -624,8 +721,12 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 		{
 			var iReturn = 0;
 			var weapons = this.weapons();
-			for (i in weapons) iReturn += +Aesica.Toolkit.getTag.call(weapons[i], tag) || 0;
+			for (i in weapons) iReturn += +Aesica.Toolkit.getTag.call(weapons[i], "Stat Base " + tag) || 0;
 			return iReturn;
+		}
+		Game_BattlerBase.prototype.unarmedTagStat = function(tag)
+		{
+			return this.tagStat(tag) - this.weaponTagStat(tag);
 		}
 		Game_BattlerBase.prototype.anyStateAffected = function(...states)
 		{
@@ -639,6 +740,7 @@ Aesica.Toolkit.battleCoreVersion = 1.1;
 			}
 			return bReturn;
 		}
+		
 		Game_Unit.prototype.numAnyStateAffected = function(...states)
 		{
 			var iReturn = 0;
@@ -751,7 +853,28 @@ $$.sortSkills = function(a, b)
 		Window_BattleLog.prototype.displayAction = function(subject, item){ if (!Aesica.Toolkit.tagExists.call(item, "Hide Combat Text")) $$.Window_BattleLog_displayAction.call(this, subject, item); }
 	}
 /**-------------------------------------------------------------------	
-	Zone States
+	State Incrementation
+//-------------------------------------------------------------------*/
+	Game_BattlerBase.prototype.incrementStates = function(...stateIds)
+	{
+		var nextState;
+		var states = this._states.map(x => x);
+		var checkAll = stateIds.length === 0;
+		for (i in states)
+		{
+			if (this.isStateAffected(states[i]) && (checkAll || stateIds.contains(states[i])))
+			{
+				nextState = +Aesica.Toolkit.getTag.call($dataStates[states[i]], "Next State");
+				if (nextState)
+				{
+					this.removeState(states[i]);
+					this.addState(nextState);
+				}
+			}
+		}
+	}
+/**-------------------------------------------------------------------	
+	Zone Effects
 //-------------------------------------------------------------------*/
 	$$.BattleManager_endTurn = BattleManager.endTurn;
 	BattleManager.endTurn = function()
@@ -767,16 +890,16 @@ $$.sortSkills = function(a, b)
 	$$.applyZoneEffects = function()
 	{
 		var tagName = "Zone Effect";
-		var tagData = Aesica.Toolkit.getTag.call($dataMap, tagName);
-		var members, target, inBattle, isImmune, isWeak, damageValue, affectedCount = 0;
+		var tagData, members, target, inBattle, isImmune, isWeak, damageValue, affectedCount = 0;
 		var effectId, animId, damage, immune, weakness, targetGroup;
-		if (tagData)
+		if ($dataMap && Aesica.Toolkit.tagExists.call($dataMap, tagName))
 		{
-			tagData = Aesica.Toolkit.parseTagData(tagData);
+			tagData = Aesica.Toolkit.getTagList.call($dataMap, tagName);
+			console.log(tagData);
 			inBattle = $gameParty.inBattle();
 			for (i in tagData)
 			{
-				effects = (tagData[i].state || "").split(",").map(x => +x || 0);
+				effects = (String(tagData[i].state) || "").split(",").map(x => +x || 0);
 				animId = +tagData[i].animation || 0;
 				weakness = tagData[i].weakness;
 				immune = tagData[i].immune;
@@ -805,9 +928,10 @@ $$.sortSkills = function(a, b)
 							target.gainHp(-damageValue);
 							target.startDamagePopup();
 							target.refresh();
+							if (target.isDead()) target.performCollapse();
 						}
 						if (animId > 0 && inBattle) target.startAnimation(animId);
-						for (k in effects) if (effects[k] > 0) target.addState(effects[k]);
+						for (k in effects) if (effects[k] > 0) if (Math.random() < target.stateRate(effects[k])) target.addState(effects[k]);
 						affectedCount++;
 					}
 				}
