@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_Core = true;
 var Aesica = Aesica || {};
 Aesica.Core = Aesica.Core || {};
-Aesica.Core.version = 2.7;
+Aesica.Core.version = 2.85;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.coreVersion = 1.0;
 /*:
-* @plugindesc v2.7 Contains several enhancements for various aspects of RMMV.
+* @plugindesc v2.85 Contains several enhancements for various aspects of RMMV.
 *
 * @author Aesica
 *
@@ -48,6 +48,27 @@ Aesica.Toolkit.coreVersion = 1.0;
 * @default true
 * @on Show
 * @off Hide
+*
+* @param Screen Mode Label
+* @parent Config Manager
+* @desc Label for screen mode setting.  Leave blank to disable.
+* @type text
+* @default Screen Mode
+*
+* @param Screen Mode Options
+* @parent Config Manager
+* @desc Options for screen mode setting.
+* @type text[]
+* @default ["Windowed","Fullscreen","Fullscreen (Fit)"]
+*
+* @param Default Screen Mode
+* @parent Config Manager
+* @desc Set screen mode default for the first time the game is run
+* @type select
+* @option Windowed (Default)
+* @option Fullscreen
+* @option Fullscreen (Fit)
+* @default Windowed (Default)
 *
 * @param Master Volume Label
 * @parent Config Manager
@@ -158,19 +179,6 @@ Aesica.Toolkit.coreVersion = 1.0;
 * @min 0
 * @max 100
 * @default 70
-*
-* @param Shop Patch
-* @desc Enable the shop 'Quantity Possessed' patch to include equipped weapons and armor?
-* @type boolean
-* @on Enable
-* @off Disable
-* @default true
-*
-* @param Shop Sell Modifier
-* @parent Shop Patch
-* @desc Set the multiplier for an item's default selling price.  (default 0.5)
-* @type text
-* @default 0.5
 *
 * @param Bush Depth/Opacity Settings
 * @desc Enable the custom settings for bushes provided by this plugin?
@@ -289,14 +297,6 @@ Aesica.Toolkit.coreVersion = 1.0;
 *
 * ----------------------------------------------------------------------
 *
-* Shop Item "Possessed" Quantity Patch
-* By default, shops don't account for any weapons or armor you have equipped
-* when displaying the quantity.  This is not only misleading, but can also cause
-* you to lose gear if you are at the max for that item and attempt to unequip 
-* what would be an extra.  This is simply a patch to correct that oversight.
-*
-* ----------------------------------------------------------------------
-*
 * Plugin Command execution function
 * An easy (easier, anyway) way to execute plugin commands via script calls
 * using the exact same syntax used in events.  Examples:
@@ -378,7 +378,6 @@ Aesica.Toolkit.coreVersion = 1.0;
 	$$.params.section = {};
 	$$.params.section.configManager = String($$.pluginParameters["Config Manager"]).toLowerCase() === "false" ? false : true;
 	$$.params.section.universalObtainItem = String($$.pluginParameters["Universal Obtain Item"]).toLowerCase() === "false" ? false : true;
-	$$.params.section.shopPatch = String($$.pluginParameters["Shop Patch"]).toLowerCase() === "false" ? false : true;
 	$$.params.configManager = {};
 	$$.params.configManager.showAlwaysDash = String($$.pluginParameters["Show Always Dash"]).toLowerCase() === "false" ? false : true;
 	$$.params.configManager.alwaysDash = String($$.pluginParameters["Always Dash"]).toLowerCase() === "false" ? false : true;
@@ -386,6 +385,9 @@ Aesica.Toolkit.coreVersion = 1.0;
 	$$.params.configManager.commandRemember = String($$.pluginParameters["Remember Commands"]).toLowerCase() === "false" ? false : true;
 	$$.params.configManager.showInstantText = String($$.pluginParameters["Show Instant Text"]).toLowerCase() === "false" ? false : true;
 	$$.params.configManager.instantText = String($$.pluginParameters["Instant Text"]).toLowerCase() === "false" ? false : true;
+	$$.params.configManager.screenModeLabel = String($$.pluginParameters["Screen Mode Label"]);
+	$$.params.configManager.screenModeOptions = JSON.parse($$.pluginParameters["Screen Mode Options"]);
+	$$.params.configManager.screenMode = ["windowed (default)", "fullscreen", "fullscreen (fit)"].indexOf(String($$.pluginParameters["Default Screen Mode"]).toLowerCase()) || 0;
 	$$.params.configManager.masterVolumeLabel = String($$.pluginParameters["Master Volume Label"]);
 	$$.params.configManager.masterVolume = +$$.pluginParameters["Default Master Volume"] || 0;
 	$$.params.configManager.bgmVolume = +$$.pluginParameters["Default BGM Volume"] || 0;
@@ -394,7 +396,6 @@ Aesica.Toolkit.coreVersion = 1.0;
 	$$.params.configManager.seVolume = +$$.pluginParameters["Default SE Volume"] || 0;
 	$$.params.individualVolumeControls = String($$.pluginParameters["Individual Volume Controls"]).toLowerCase() === "false" ? false : true;
 	$$.params.volumeOffset = +$$.pluginParameters["Volume Adjustment Offset"] || 10;
-	$$.params.shopSellModifier = +$$.pluginParameters["Shop Sell Modifier"] || 0;
 	$$.params.bushSettings = String($$.pluginParameters["Bush Depth/Opacity Settings"]).toLowerCase() === "false" ? false : true;
 	$$.params.bushOpacity = +$$.pluginParameters["Bush Opacity"] || 0;
 	$$.params.bushDepth = +$$.pluginParameters["Bush Depth"] || 0;
@@ -414,7 +415,8 @@ Aesica.Toolkit.coreVersion = 1.0;
 		else if (command.match(/^ObtainGold/i) && $$.params.section.universalObtainItem) $$.obtainItem(3, 0, args[0]);
 		else if (command.match(/^ForceExitVehicle/i)) $$.forceExitVehicle(args);
 		else if (command.match(/^ForgetSkills/i)) $$.forgetSkillsCommand(args);
-	}
+		else if (command.match(/^UseItem/i)) $$.useItem(args);
+	};
 /**-------------------------------------------------------------------	
 	Aesica.Toolkit: Note tag parsing functions
 //-------------------------------------------------------------------*/	
@@ -428,12 +430,12 @@ Aesica.Toolkit.coreVersion = 1.0;
 			if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
 			else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
 			return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
-		}
+		};
 		Aesica.Toolkit.tagExists = function(tag)
 		{
 			var note = this.note || "";
 			return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
-		}
+		};
 		Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 		{
 			var value = [];
@@ -453,7 +455,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 				for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
 			}
 			return deepScan ? value : (value[0] ? value[0] : false);
-		}
+		};
 	}
 /**-------------------------------------------------------------------
 	ConfigManager tweaks
@@ -472,6 +474,23 @@ Aesica.Toolkit.coreVersion = 1.0;
 			set: function(value){ $$.params.configManager.instantText = !!value; },
 			configurable: true
 		});
+		Object.defineProperty(ConfigManager, "screenMode",
+		{
+			get: function(){ return +$$.params.fullscreenMode || 0; },
+			set: function(value)
+			{
+				$$.params.fullscreenMode = value.clamp(0, $$.params.configManager.screenModeOptions.length - 1);
+				if (value > 0)
+				{
+					if (value === 1) Graphics._stretchEnabled = false;
+					else if (value === 2) Graphics._stretchEnabled = true;
+					Graphics._updateAllElements();
+					Graphics._requestFullScreen();
+				}
+				else Graphics._cancelFullScreen();
+			},
+			configurable: true
+		});
 		$$.Window_Options_addGeneralOptions = Window_Options.prototype.addGeneralOptions;
 		Window_Options.prototype.addGeneralOptions = function()
 		{
@@ -483,26 +502,29 @@ Aesica.Toolkit.coreVersion = 1.0;
 				if ($$.params.configManager.showCommandRemember) this.addCommand(TextManager.commandRemember, 'commandRemember');
 			}			
 			if ($$.params.configManager.showInstantText) this.addCommand("Instant Text", "instantText");
-		}
+			if ($$.params.configManager.screenModeLabel !== "") this.addCommand($$.params.configManager.screenModeLabel, "screenMode");
+		};
 		$$.ConfigManager_makeData = ConfigManager.makeData;
 		ConfigManager.makeData = function()
 		{
 			var config = $$.ConfigManager_makeData.call(this);
 			config.instantText = this.instantText;
 			config.masterVolume = this.masterVolume;
+			config.screenMode = this.screenMode;
 			return config;
-		}		
+		};
 		ConfigManager.applyData = function(config)
 		{
 			this.alwaysDash = config.alwaysDash === undefined ? $$.params.configManager.alwaysDash : this.readFlag(config, "alwaysDash");
 			this.commandRemember = config.commandRemember === undefined ? $$.params.configManager.commandRemember : this.readFlag(config, "commandRemember");
 			this.instantText = config.instantText === undefined ? $$.params.configManager.instantText : this.readFlag(config, "instantText");
+			this.screenMode = config.screenMode === undefined ? $$.params.configManager.screenMode : (+config.screenMode).clamp(0, 2);
 			this.masterVolume = this.readVolume(config, "masterVolume");
 			this.bgmVolume = this.readVolume(config, "bgmVolume");
 			this.bgsVolume = this.readVolume(config, "bgsVolume");
 			this.meVolume = this.readVolume(config, "meVolume");
 			this.seVolume = this.readVolume(config, "seVolume");
-		}
+		};
 		ConfigManager.readVolume = function(config, name)
 		{
 			var value = config[name];
@@ -514,17 +536,90 @@ Aesica.Toolkit.coreVersion = 1.0;
 			{
 				return +$$.params.configManager[name].clamp(0, 100);
 			}
-		}
+		};
 		Window_Options.prototype.volumeOffset = function()
 		{
 			return $$.params.volumeOffset;
-		}
+		};
 		$$.Window_Options_addVolumeOptions = Window_Options.prototype.addVolumeOptions;
 		Window_Options.prototype.addVolumeOptions = function()
 		{
 			if ($$.params.configManager.masterVolumeLabel != "") this.addCommand($$.params.configManager.masterVolumeLabel, 'masterVolume');
 			if ($$.params.individualVolumeControls) $$.Window_Options_addVolumeOptions.call(this);
-		}		
+		};
+		Window_Options.prototype.screenModeText = function(value)
+		{
+			return $$.params.configManager.screenModeOptions[value] || "???";
+		};
+		$$.Window_Options_statusText = Window_Options.prototype.statusText;
+		Window_Options.prototype.statusText = function(index)
+		{
+			var result;
+			var symbol = this.commandSymbol(index);
+			var value = this.getConfigValue(symbol);
+			if (symbol === "screenMode")
+			{
+				result = this.screenModeText(value);
+			}
+			else result = $$.Window_Options_statusText.call(this, index);
+			return result;
+		};
+		$$.Window_Options_processOk = Window_Options.prototype.processOk;
+		Window_Options.prototype.processOk = function()
+		{
+			var symbol = this.commandSymbol(this.index());
+			var value = this.getConfigValue(symbol);
+			if (symbol === "screenMode")
+			{
+				value++;
+				if (value > $$.params.configManager.screenModeOptions.length) value = 0;
+				value = value.clamp(0, $$.params.configManager.screenModeOptions.length - 1);
+				this.changeValue(symbol, value);
+			}
+			else $$.Window_Options_processOk.call(this);
+		};
+		$$.Window_Options_cursorRight = Window_Options.prototype.cursorRight;
+		Window_Options.prototype.cursorRight = function(wrap)
+		{
+			var symbol = this.commandSymbol(this.index());
+			var value = this.getConfigValue(symbol);
+			if (symbol === "screenMode")
+			{
+				value++;
+				value = value.clamp(0, $$.params.configManager.screenModeOptions.length - 1);
+				this.changeValue(symbol, value);
+			}
+			else $$.Window_Options_cursorRight.call(this, wrap);
+		};
+		$$.Window_Options_cursorLeft = Window_Options.prototype.cursorLeft;
+		Window_Options.prototype.cursorLeft = function(wrap)
+		{
+			var symbol = this.commandSymbol(this.index());
+			var value = this.getConfigValue(symbol);
+			if (symbol === "screenMode")
+			{
+				value--;
+				value = value.clamp(0, $$.params.configManager.screenModeOptions.length - 1);
+				this.changeValue(symbol, value);
+			}
+			else $$.Window_Options_cursorLeft.call(this, wrap);
+			var index = this.index();
+		};	
+		$$.Graphics__switchFullScreen = Graphics._switchFullScreen;
+		Graphics._switchFullScreen = function()
+		{
+			$$.Graphics__switchFullScreen.call(this);
+			if (this._isFullScreen()) ConfigManager.screenMode = this._stretchEnabled ? 2 : 1;
+			else ConfigManager.screenMode = 0;
+			ConfigManager.save();
+		};
+		$$.Graphics__switchStretchMode = Graphics._switchStretchMode;
+		Graphics._switchStretchMode = function()
+		{
+			$$.Graphics__switchStretchMode.call(this);
+			if (this._isFullScreen) ConfigManager.screenMode = this._stretchEnabled ? 2 : 1;
+			ConfigManager.save();
+		};
 	}
 /**-------------------------------------------------------------------
 	Plugin command exec
@@ -534,7 +629,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 		args = args.split(" ");
 		var command = args.shift();
 		Game_Interpreter.prototype.pluginCommand.call(Game_Interpreter, command, args);
-	}
+	};
 /**-------------------------------------------------------------------
 	Self-Switch manipulation & event tag counting
 //-------------------------------------------------------------------*/	
@@ -557,7 +652,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 			}
 		}
 		return oReturn;
-	}
+	};
 	$$.setSelfSwitchesByTag = function(switchID, tag, newValue)
 	{
 		var events = $gameMap.events();
@@ -577,7 +672,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 			}
 		}
 		return oReturn;
-	}
+	};
 	$$.getSelfSwitchCountByTag = function(switchID, tag, value)
 	{
 		var events = $gameMap.events();
@@ -591,7 +686,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 			if ((!tag || Aesica.Toolkit.tagExists.call(currentEvent, tag)) && $gameSelfSwitches.value([mapID, events[i].eventId(), switchID]) == value) iReturn++;
 		}
 		return iReturn;
-	}
+	};
 	$$.getEventCountByTag = function(tag)
 	{
 		var events = $gameMap.events();
@@ -604,11 +699,11 @@ Aesica.Toolkit.coreVersion = 1.0;
 			if (Aesica.Toolkit.tagExists.call(currentEvent, tag)) iReturn++;
 		}
 		return iReturn;
-	}
+	};
 	$$.eventTag = function(tag)
 	{
 		return Aesica.Toolkit.getTag.call($gameMap.event(this._eventId).event(), tag);
-	}
+	};
 /**-------------------------------------------------------------------	
 	Instant Text Rendering
 //-------------------------------------------------------------------*/	
@@ -617,11 +712,11 @@ Aesica.Toolkit.coreVersion = 1.0;
 	{
 		this._showFast = !!$$.params.configManager.instantText ? true : this._showFast;
 		return $$.Window_Message_updateInput.call(this);
-	}
+	};
 	$$.setInstantText = function(onOrOff)
 	{
 		ConfigManager.instantText = !!+onOrOff;
-	}
+	};
 /**-------------------------------------------------------------------	
 	ObtainItem/Gold Plugin Commands
 //-------------------------------------------------------------------*/	
@@ -673,9 +768,10 @@ Aesica.Toolkit.coreVersion = 1.0;
 				
 				AudioManager.playSe(se);
 				$gameMessage.add(message);
+				if ($gameMap && $gameMap._interpreter) $gameMap._interpreter.setWaitMode("message");
 			}
 			else console.log("AES_Core:  Invalid item type/quantity or itemID out of bounds. itemType:[" + itemType + "], itemID:[" + itemID + "], quantity:[" + quantity + "]");
-		}
+		};
 	}
 /**-------------------------------------------------------------------	
 	Flexible bush height/opacity
@@ -699,7 +795,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 				this._lowerBody.opacity = $$.params.bushOpacity;
 				this.addChild(this._lowerBody);
 			}
-		}
+		};
 		Game_CharacterBase.prototype.refreshBushDepth = function()
 		{
 			if (this.isNormalPriority() && !this.isObjectCharacter() && this.isOnBush() && !this.isJumping())
@@ -707,7 +803,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 				if (!this.isMoving()) this._bushDepth = $$.params.bushDepth;
 			}
 			else this._bushDepth = 0;
-		}
+		};
 	}
 /**-------------------------------------------------------------------	
 	Force exit vehicle plugin command/function
@@ -728,7 +824,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 			player.makeEncounterCount();
 			player.gatherFollowers();
 		}
-	}
+	};
 /**-------------------------------------------------------------------	
 	Skill mass-unlearn functions
 //-------------------------------------------------------------------*/
@@ -749,7 +845,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 		}
 		else console.log("AES_Core: Invalid parameters in ForgetSkills plugin command");
 		if (args[2]) $gameVariables.setValue(args[2], result);
-	}
+	};
 	Game_Actor.prototype.forgetSkills = function()
 	{
 		var i, iLength = this._skills.length;
@@ -763,7 +859,7 @@ Aesica.Toolkit.coreVersion = 1.0;
 			}
 		}
 		return counter;
-	}
+	};
 /**-------------------------------------------------------------------	
 	NPC/Event functions
 //-------------------------------------------------------------------*/
@@ -772,95 +868,36 @@ Aesica.Toolkit.coreVersion = 1.0;
 		var actor = $dataActors[actorId];
 		if (actor) this.setImage(actor.characterName, actor.characterIndex);
 		else this.setImage("", 0);
-	}
+	};
 /**-------------------------------------------------------------------	
-	Shop quantity owned patch - now includes equipped items
+	Force Use Item
 //-------------------------------------------------------------------*/
-	if ($$.params.section.shopPatch)
+	$$.useItem = function(args)
 	{
-		$$.DataManager_isDatabaseLoaded = DataManager.isDatabaseLoaded;
-		DataManager.isDatabaseLoaded = function()
+		var item = $dataItems[+args[0] || 0];
+		var target, action, canBeApplied, user, j;
+		var inBattle = $gameParty.inBattle();
+		if (item)
 		{
-			var bReturn = $$.DataManager_isDatabaseLoaded.call(this);
-			var bYepItemSynthLoaded = false;
-			if (bReturn && !Aesica._shopPatchCategorizedItems)
+			user = $gameParty.members()[+args[1] || 0];
+			action = new Game_Action(user);
+			action.setItemObject(item);
+			target = item.scope == 7 ? [user] : action.makeTargets();
+			for (i in target) canBeApplied = action.testApply(target[i]) || canBeApplied; // test use
+			if (user.canUse(item) && canBeApplied)
 			{
-				if (Imported.YEP_ItemSynthesis)
+				user.useItem(item);
+				for (i in target)
 				{
-					if (Yanfly._loaded_YEP_ItemSynthesis)
+					if (item.animationId)
 					{
-						console.log("AES_Core: Item groupTypes already assigned by YEP_ItemSynthesis");
-						bYepItemSynthLoaded = true;
+						if (inBattle) target[i].startAnimation(item.animationId);
+						else $gamePlayer.requestAnimation(item.animationId);
 					}
-				}
-				if (!bYepItemSynthLoaded)
-				{
-					$$.assignGroupType($dataItems, 0);
-					$$.assignGroupType($dataWeapons, 1);
-					$$.assignGroupType($dataArmors, 2);
-					$$._shopPatchCategorizedItems = true;
+					for (j = action.numRepeats(); j--;) action.apply(target[i]);
+					action.applyGlobal();
 				}
 			}
-			return bReturn;
 		}
-		$$.assignGroupType = function(group, type)
-		{
-			var i, iLength = group.length;
-			for (i = 1; i < iLength; i++) group[i].groupType = type;
-		}
-		$$.Game_Party_numItems = Game_Party.prototype.numItems;
-		Game_Party.prototype.numItems = function(item, includeEquipped=false)
-		{
-			var iReturn, container, i, iLength, j, jLength, party, items;
-			if (item.groupType > 0 && includeEquipped)
-			{
-				container = this.itemContainer(item);
-				iReturn = container ? container[item.id] || 0 : 0;
-				party = $gameParty.members();
-				iLength = party.length;
-				for (i = 0; i < iLength; i++)
-				{
-					if (item.groupType == 1) items = party[i].weapons();
-					else if (item.groupType == 2) items = party[i].armors();
-					jLength = items.length;
-					for (j = 0; j < jLength; j++){ if (items[j].id == item.id) iReturn++; }
-				}
-			}
-			else iReturn = $$.Game_Party_numItems.call(this, item);
-			return iReturn;
-		}
-		$$.Game_Party_hasMaxItems = Game_Party.prototype.hasMaxItems;
-		Game_Party.prototype.hasMaxItems = function(item)
-		{
-			return this.numItems(item, true) >= this.maxItems(item);
-		}
-		$$.Window_ShopStatus_drawPossession = Window_ShopStatus.prototype.drawPossession;
-		Window_ShopStatus.prototype.drawPossession = function(x, y)
-		{
-			var width, possessionWidth;
-			width = this.contents.width - this.textPadding() - x;
-			possessionWidth = this.textWidth('0000');
-			this.changeTextColor(this.systemColor());
-			this.drawText(TextManager.possession, x, y, width - possessionWidth);
-			this.resetTextColor();
-			this.drawText($gameParty.numItems(this._item, true), x, y, width, 'right');
-		}
-		$$.Scene_Shop_maxBuy = Scene_Shop.prototype.maxBuy;
-		Scene_Shop.prototype.maxBuy = function()
-		{
-			var max, price, iReturn;
-			max = $gameParty.maxItems(this._item) - $gameParty.numItems(this._item, true);
-			price = this.buyingPrice();
-			iReturn = max;
-			if (price > 0)
-			{
-				iReturn = Math.min(max, Math.floor(this.money() / price));
-			}
-			return iReturn;
-		}
-		Scene_Shop.prototype.sellingPrice = function()
-		{
-			return Math.floor(this._item.price * $$.params.shopSellModifier);
-		}
-	}
+	};
 })(Aesica.Core);
