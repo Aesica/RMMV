@@ -8,6 +8,7 @@ These terms apply to every RMMV plugin in this repo:
 - You may edit the code as needed to fit your game
 - You may NOT remove my name from the @author section, you may NOT remove the link to this readme from the @help section, and you may NOT attempt to otherwise pass my work off as your own (come on, we all know that's a dick move, so don't be one~)
 - A copy of your game (once completed) would be nice so I can see how my scripts are being used, but it's not required.
+- **Regarding AES_LootBox specifically:**  You are NOT authorized to use this plugin to create microtransaction-based loot box systems in any game using this plugin.  This includes, but is not limited to, prize packs or keys (items required to open prize packs) that are purchased with real-world money or with a currency that is awarded as a direct (or indirect) result of spending real-world money via microtransactions.  In short, this plugin is fine for use in commercial games as long as they're not trying to profit off loot box systems.  This limitation supercedes any of the other terms and conditions listed here.
 
 ## How to Credit Me
 - List my name (Aesica) in your game's credits under your scripts/code section, or under "Scripting" if you don't yet have a scripting section.  Easy peasy, right? :D
@@ -30,6 +31,12 @@ Info:  Contains quite a few small (but generally useful) improvements to the bas
 - Execution of plugin commands via script calls using the same syntax format as a standard plugin command
 - Control over bush opacity vs the lower half of actors and events
 - Probably some other things I'm forgetting
+
+**4/7/2020 - 2.85**
+- Added fullscreen settings to options menu
+- Fullscreen/stretch/etc settings are now saved
+- Added missing waitmode to Obtain Item framework's message display (it'll work better with events now)
+- Removed the "shop patch" code--it's now a part of the Improved Shop plugin
 
 **8/20/2019 - 2.7**
 - Added version control for Aesica.Toolkit (mostly notetag processing functions) so that multiple plugins using it won't overwrite it unless their version is newer.  In light of this change, it is strongly recommened that you update to this version or later if using more than one of my plugins.
@@ -70,6 +77,17 @@ Info: The contents of this plugin were split off from AES_Core.  Includes variou
 - Can add zone-based effects to battles, so that being deep in a volcano burns everybody every turn, etc
 - Able to alter the color and opacity of the battle log window
 - Certain skills can be set to not display action text (or their name if using YEP_BattleEngineCore) via note tag
+
+**4/7/2020 - 2.2**
+- Added a tag-based state incrementation function.  See documentation for details
+- Fixed a bug with weaponTagStat not working
+- Added battler.unarmedAtk, etc which is really just (for example) a.atk - a.weaponAtk, but still handy I guess
+- Added battler.unarmedTagStat(tag), same as the above but for tag stats
+- Added documentation about Game_Unit.prototype.numAnyStateAffected and Game_Unit.prototype.numAllStateAffected
+- Zone Effects will now properly check state rates (not just state resist) when attempting to apply states
+- Added death/collapse check to zone effects.  Oops.
+- Battlers now have minDamage and maxDamage properties which return the min and max damage the game will allow them to deal--before skill overrides
+- Changed note tag syntax for zone effects to something a bit friendlier (see documentation)
 
 **1/8/2020 - 2.1**
 - **If using AES_RaceCore, it needs to be updated to v1.6 in order to continue functioning with this plugin**
@@ -146,6 +164,10 @@ Info:  Gives you more control over the various actor commands and such
 - Can add individual skills as actor commands
 - Features a basic limit break system that utilizes TP
 
+**4/7/2020 - 1.3**
+- Added the ability to place commands into left and right sub-menus in the actor command window. FF-style Guard is now a thing
+- Added compatibility for putting the Equip command from YEP_ChangeBattleEquip into the left or right menus
+
 ----------------------------------------------------------------------------------------------------------------------
 
 ### AES_CustomMP
@@ -218,8 +240,37 @@ Info:  Adds races and racial modifiers to your game's battle system
 - Defense vs racetype note tags for actors/enemies, classes, skills, equips, and states
 - Function to retrieve the name of the target's race
 
+**4/7/2020 - 2.0**
+- Near-complete overhaul
+- Changed note tag syntax to require race IDs instead of ID or name.  This was done for performance and stability reasons
+- Added <Subrace: string> tag.  This is a cosmetic string only, accessible via Game_BattlerBase.prototype.subRace
+- Added <Sex: n> tag.  This can be set on actors/enemies, classes, equips, and states and that order has priority, low to high
+- Added additional functionality to races. Races can now be set on actors/enemies, classes, equips, and states. (undead/assimilated/etc states and such) It's possible to have multiple races in this manner, thus a "humanoid" affected by an "undead" state counts as both humanoid and undead.
+- Available battler properties:  a.race, a.defaultRace, a.raceList, a.subrace, a.sex, a.sexId
+- Available battler functions:  a.isRace(raceId)
+
 **1/8/2020 - 1.6**
 - Compatibility update for AES_BattleCore v2.1 and above
 
 **5/8/2019 - 1.5**
 - Fixed a bug that was causing crashes in some cases
+
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_ImprovedShop
+Info:  Adds extra features to the shop system
+- Can be set to display the number of items owned and equipped (instead of just owned) in various ways
+- Shops can now sell limited quantities of certain items
+- Certain shops can now relist anything the player sells
+- Can now set different buy/sell markup/markdown values on a per-shop basis
+- All items sold to shops that don't relist are sent to a special "Master Shop" which, if used, will let the player buy back anything they sold in the past.  (like Lufia 1's infamous "Forfeit Isle" shop)
+- For advanced users, shops can be built dynamically during runtime
+- Compatible with Yanfly's shop + more currencies plugins
+
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_LootBox
+Info:  Adds the ability to create random-reward "loot boxes" to your game.  I hope I don't regret releasing this!
+- Allows you to create "loot boxes" which are lists of various items, gold, or common events in varying or unlimited quantities and varied weights
+- When invoked, will award the player something from that list, based on weight, etc.
+- For advanced users, these can also be built dynamically during runtime
