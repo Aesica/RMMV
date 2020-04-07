@@ -2,7 +2,7 @@ var Imported = Imported || {};
 Imported.AES_CommandControl = true;
 var Aesica = Aesica || {};
 Aesica.CommandControl = Aesica.CommandControl || {};
-Aesica.CommandControl.version = 1.25;
+Aesica.CommandControl.version = 1.3;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.commandControlVersion = 1.1;
 /*:
@@ -256,7 +256,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			console.log(args);
 		}
 		return result;
-	}
+	};
 	$$.pluginParameters = PluginManager.parameters("AES_CommandControl");
 	$$.params = {};
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
@@ -281,12 +281,12 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			if (Aesica.Toolkit.tagExists.call(this, "\\/" + tag)) result = note.match(RegExp("<" + tag + ">([^]+)<\\/" + tag + ">", "i"));
 			else result = note.match(RegExp("<" + tag + ":[ ]*([^>]+)>", "i"));
 			return result ? result[1].trim() : Aesica.Toolkit.tagExists.call(this, tag);
-		}
+		};
 		Aesica.Toolkit.tagExists = function(tag)
 		{
 			var note = this.note || "";
 			return RegExp("<" + tag + "(?::[^>]+)?>", "i").test(note);
-		}
+		};
 		Aesica.Toolkit.parseTagData = function(tagData)
 		{
 			tagData = tagData.split(";");
@@ -299,7 +299,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 				aList[i] = oUnit;
 			}
 			return aList;
-		}	
+		};
 		Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 		{
 			var value = [];
@@ -319,23 +319,18 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 				for (i in state){ if (Aesica.Toolkit.tagExists.call(state[i], tag)) value.push(Aesica.Toolkit.getTag.call(state[i], tag)); }
 			}
 			return deepScan ? value : (value[0] ? value[0] : false);
-		}
+		};
 	}	
 /**-------------------------------------------------------------------	
 	Static command control - Attack, Guard, Item, Limit Breaks,
 	Attack replacers, and Guard state bonuses
 //-------------------------------------------------------------------*/
+	$$.Scene_Battle_createActorCommandWindow = Scene_Battle.prototype.createActorCommandWindow;
 	Scene_Battle.prototype.createActorCommandWindow = function()
 	{
-		this._actorCommandWindow = new Window_ActorCommand();
-		this._actorCommandWindow.setHandler("attack", this.commandAttack.bind(this));
-		this._actorCommandWindow.setHandler("skill", this.commandSkill.bind(this));
+		$$.Scene_Battle_createActorCommandWindow.call(this);
 		this._actorCommandWindow.setHandler("singleSkill", this.commandSingleSkill.bind(this));
-		this._actorCommandWindow.setHandler("guard", this.commandGuard.bind(this));
-		this._actorCommandWindow.setHandler("item", this.commandItem.bind(this));
-		this._actorCommandWindow.setHandler("cancel", this.selectPreviousCommand.bind(this));
-		this.addWindow(this._actorCommandWindow);
-	}
+	};
 	$$.Window_ActorCommand_createAllParts = Window_ActorCommand.prototype._createAllParts;
 	Window_ActorCommand.prototype._createAllParts = function()
 	{
@@ -344,14 +339,14 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		this._rightArrowSprite = new Sprite();
 		this.addChild(this._leftArrowSprite);
 		this.addChild(this._rightArrowSprite);
-	}
+	};
 	Scene_Battle.prototype.commandSingleSkill = function()
 	{
 		var skill = $dataSkills[this._actorCommandWindow.currentExt()];
 		BattleManager.inputtingAction().setSkill(skill.id);
 		BattleManager.actor().setLastBattleSkill(skill);
 		this.onSelectAction();
-	}
+	};
 	$$.Window_ActorCommand_setup = Window_ActorCommand.prototype.setup;
 	Window_ActorCommand.prototype.setup = function(actor)
 	{
@@ -359,19 +354,13 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		this._leftCommandMax = 0;
 		this._rightCommandMax = 0;
 		$$.Window_ActorCommand_setup.call(this, actor);
-	}
+	};
 	Window_ActorCommand.prototype.makeCommandList = function()
 	{
-		var attackMode, guardMode, itemMode;
-		var activeList = [];
-		var inactiveList = [];
 		if (this._actor)
 		{
-			attackMode = this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(this._actor.attackSkillId()) === this._commandPage;
-			guardMode = this._actor.commandEnabled("guard", $$.params.enableGuard) && this.commandListId(this._actor.guardSkillId()) === this._commandPage;
-			itemMode = this._actor.commandEnabled("item", $$.params.enableItem) && this.commandListId(TextManager.item) === this._commandPage;
 			if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId(this._actor.attackSkillId()) === this._commandPage) this.addLimitCommand();
-			else if (attackMode) this.addAttackCommand();
+			else if (this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(TextManager.attack) === this._commandPage) this.addAttackCommand();
 			if ($$.params.singleSkillCommandOrder)
 			{
 				this.addSingleSkillCommands();
@@ -382,10 +371,17 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 				this.addSkillCommands();
 				this.addSingleSkillCommands();
 			}
-			if (guardMode) this.addGuardCommand();
-			if (itemMode) this.addItemCommand();
+			if (this._actor.commandEnabled("guard", $$.params.enableGuard)) this.addGuardCommand();
+			if (this._actor.commandEnabled("item", $$.params.enableItem)) this.addItemCommand();
+			// YEP_X_ChangeBattleEquip compatibility
+			if (Imported.YEP_X_ChangeBattleEquip) this.addEquipChangeCommand();
 		}
-	}
+	};
+	$$.Window_ActorCommand_addCommand = Window_ActorCommand.prototype.addCommand;
+	Window_ActorCommand.prototype.addCommand = function(name, symbol, enabled, ext, genericName)
+	{
+		if (this.commandListId(genericName || name) === this._commandPage) $$.Window_ActorCommand_addCommand.call(this, name, symbol, enabled, ext);
+	};
 	Window_ActorCommand.prototype.commandListId = function(skillId)
 	{
 		var result = 0;
@@ -406,7 +402,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			if (!this._rightCommandMax && result === 1) this._rightCommandMax = 1;
 		}
 		return result;
-	}
+	};
 	$$.Window_ActorCommand_refreshArrows = Window_ActorCommand.prototype._refreshArrows;
 	Window_ActorCommand.prototype._refreshArrows = function()
 	{
@@ -424,21 +420,21 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		this._rightArrowSprite.anchor.y = 0.5;
 		this._rightArrowSprite.setFrame(rect.x + 34, rect.y, rect.width, rect.height);
 		this._rightArrowSprite.move(w - rect.halfWidth, h * 0.5);
-	}
+	};
 	$$.Window_ActorCommand_updateArrows = Window_ActorCommand.prototype._updateArrows;
 	Window_ActorCommand.prototype._updateArrows = function()
 	{
 		$$.Window_ActorCommand_updateArrows.call(this);
 		this._leftArrowSprite.visible = this.isOpen() && this.leftArrowVisible;
 		this._rightArrowSprite.visible = this.isOpen() && this.rightArrowVisible;
-	}
+	};
 	$$.Window_Selectable_drawAllItems = Window_Selectable.prototype.drawAllItems;
 	Window_Selectable.prototype.drawAllItems = function()
 	{
 		this.leftArrowVisible = this._commandPage > this._leftCommandMax;
 		this.rightArrowVisible = this._commandPage < this._rightCommandMax;
 		$$.Window_Selectable_drawAllItems.call(this);
-	}
+	};
 	$$.Window_ActorCommand_addAttackCommand = Window_ActorCommand.prototype.addAttackCommand;
 	Window_ActorCommand.prototype.addAttackCommand = function()
 	{
@@ -468,10 +464,10 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 				}
 			}
 			battler._attackSkillReplaceID = attackId;
-			this.addCommand($dataSkills[attackId].name, "attack", battler.canAttack());
+			this.addCommand($dataSkills[attackId].name, "attack", battler.canAttack(), null, TextManager.attack);
 		}
 		else $$.Window_ActorCommand_addAttackCommand.call(this);
-	}
+	};
 	Window_ActorCommand.prototype.addSingleSkillCommands = function()
 	{
 		var battler = this._actor;
@@ -490,7 +486,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 				}
 			}
 		}
-	}
+	};
 	Window_ActorCommand.prototype.addSkillCommands = function()
 	{
 		var skillTypes = this._actor.addedSkillTypes();
@@ -502,11 +498,11 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			var name = $dataSystem.skillTypes[stypeId];
 			if (this.commandListId(name) === this._commandPage && !$$.params.hiddenSkillCommands.contains(stypeId)) this.addCommand(name, 'skill', true, stypeId);
 		}, this);
-	}	
+	};
 	Window_ActorCommand.prototype.addLimitCommand = function()
 	{
 		this.addCommand($dataSystem.skillTypes[$$.params.limitCommand], 'skill', true, $$.params.limitCommand);
-	}
+	};
 	Window_ActorCommand.prototype.cursorLeft = function()
 	{
 		this._commandPage--;
@@ -516,7 +512,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			SoundManager.playCursor();
 			this.updateCommandList();
 		}
-	}
+	};
 	Window_ActorCommand.prototype.cursorRight = function()
 	{
 		this._commandPage++;
@@ -526,31 +522,30 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			SoundManager.playCursor();
 			this.updateCommandList();
 		}
-	}	
+	};
 	Window_ActorCommand.prototype.updateCommandList = function()
 	{
 		this.clearCommandList();
 		this.refresh();
 		this.select(0);
 		this.activate();		
-	}
+	};
 	Game_Actor.prototype.commandEnabled = function(command, enabledByDefault) 
 	{
 		var result = this.getTag(command + " command", true);
 		result = result.length > 0 ? result[result.length - 1] : (enabledByDefault ? "show" : "hide");
 		return result.match(/hide/i) ? false : true;
-	}
-
+	};
 	Game_BattlerBase.prototype.attackSkillId = function()
 	{
 		return this._attackSkillReplaceID || 1;
-	}
+	};
 	$$.Game_Action_applyItemUserEffect = Game_Action.prototype.applyItemUserEffect;
 	Game_Action.prototype.applyItemUserEffect = function(target)
 	{
 		$$.Game_Action_applyItemUserEffect.call(this, target);
 		if (this.isGuard()) this.applyGuardBonusStates(target);
-	}
+	};
 	Game_Actor.prototype.hasLimitSkill = function()
 	{
 		var skills = this.skills();
@@ -564,7 +559,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			}
 		}
 		return bReturn;
-	}
+	};
 	Game_Action.prototype.applyGuardBonusStates = function(target)
 	{
 		var user = this.subject();
@@ -581,7 +576,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			x = +stateListAll[i];
 			if (x) for (j in targetParty) targetParty[j].addState(x);
 		}
-	}
+	};
 /**-------------------------------------------------------------------	
 	Skill Unleash
 //-------------------------------------------------------------------*/
@@ -592,14 +587,14 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		var action = subject ? subject.currentAction() : null;
 		if (action) action.attemptUnleash();
 		$$.BattleManager_startAction.call(this);
-	}
+	};
 	Game_Battler.prototype.unleashModifier = function()
 	{
 		var result = 1;
 		var modifierList = this.getTag("Unleash Modifier", true);
 		for (i in modifierList) result *= +modifierList[i] || 1;
 		return result;
-	}
+	};
 	Game_Action.prototype.attemptUnleash = function()
 	{
 		var user = this.subject();
@@ -642,5 +637,5 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 				}
 			}
 		}
-	}	
+	};
 })(Aesica.CommandControl);
