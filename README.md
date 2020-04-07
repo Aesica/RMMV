@@ -274,3 +274,9 @@ Info:  Adds the ability to create random-reward "loot boxes" to your game.  I ho
 - Allows you to create "loot boxes" which are lists of various items, gold, or common events in varying or unlimited quantities and varied weights
 - When invoked, will award the player something from that list, based on weight, etc.
 - For advanced users, these can also be built dynamically during runtime
+
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_DiceFunctions (bonus plugin)
+Info:  Allows for dice functions to be used in damage formulas
+- Pretty straightforwad:  d12(a.atk) - d4(b.def) etc
