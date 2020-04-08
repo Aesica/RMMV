@@ -280,3 +280,10 @@ Info:  Adds the ability to create random-reward "loot boxes" to your game.  I ho
 ### AES_DiceFunctions (bonus plugin)
 Info:  Allows for dice functions to be used in damage formulas
 - Pretty straightforwad:  d12(a.atk) - d4(b.def) etc
+----------------------------------------------------------------------------------------------------------------------
+
+### AES_GalvShardPatch (bonus plugin)
+Info:  Allows all AES_* plugins to iterate through galv's magic shards in addition to actor/enemy, class, equips, and states
+- Put below all other AES_* plugins.  That's it.
+- New priority order becomes:  actor/enemy, class, equip, shard, and state
+
