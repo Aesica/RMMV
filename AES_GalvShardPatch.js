@@ -28,7 +28,7 @@ Game_BattlerBase.prototype.getTag = function(tag, deepScan=false)
 			if (Aesica.Toolkit.tagExists.call($dataClasses[this._classId], tag)) value.push(Aesica.Toolkit.getTag.call($dataClasses[this._classId], tag));
 			equip = this.weapons().concat(this.armors());
 			for (i in equip){ if (Aesica.Toolkit.tagExists.call(equip[i], tag)) value.push(Aesica.Toolkit.getTag.call(equip[i], tag)); }
-			shard = this._shards;
+			shard = this._shards || {};
 			for (i in shard){ if (Aesica.Toolkit.tagExists.call(shard[i].object(), tag)) value.push(Aesica.Toolkit.getTag.call(shard[i].object(), tag)); }
 		}
 		state = this.states();
