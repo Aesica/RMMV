@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_ImprovedShop = true;
 var Aesica = Aesica || {};
 Aesica.ImprovedShop = Aesica.ImprovedShop || {};
-Aesica.ImprovedShop.version = 1.1;
+Aesica.ImprovedShop.version = 1.2;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.improvedShopVersion = 1.5;
 /*:
-* @plugindesc v1.0 Enhances shops by adding limited quantities, custom buy/sell rates, item relisting, and more
+* @plugindesc v1.2 Enhances shops by adding limited quantities, custom buy/sell rates, item relisting, and more
 * @author Aesica
 *
 * @param Default Buy Rate
@@ -98,6 +98,36 @@ Aesica.Toolkit.improvedShopVersion = 1.5;
 * 200% of the item's base value.
 * 
 * ----------------------------------------------------------------------
+* Shop name delete
+* 
+* Deletes the specified shop and all of its contents, thus:
+*
+* shop Butts delete
+*
+* Deletes the shop "Butts" and everything it has in its inventory
+* 
+* ----------------------------------------------------------------------
+* Shop name exists switchId
+*
+* If the shop exists, sets the switch matching switchId to true.  If not,
+* it sets the switch to false.
+*
+* shop Butts exists 1
+*
+* Will set switch 1 to true if Butts exists, false if not.
+*
+* Note:  If you'd rather use a script-based function call to check in a
+* single step, use:
+*
+* Aesica.ImprovedShop.exists(shopName)
+* 
+* So for the above example:
+*
+* Aesica.ImprovedShop.exists("Butts")
+*
+* The shop name is case sensitive in both cases.
+*
+* ----------------------------------------------------------------------
 * Shop name add id=n type=item|weapon|armor qty=n markup=n
 * 
 * Adds an item to the specified shop.  Examples:
@@ -147,7 +177,7 @@ Aesica.Toolkit.improvedShopVersion = 1.5;
 * weapon: 2
 * armor: 1
 * armor: 2
-*
+* ----------------------------------------------------------------------
 */
 /*~struct~ShopData:
 * @param Shop ID
@@ -417,7 +447,12 @@ Aesica.Toolkit.improvedShopVersion = 1.5;
 		args = args.map(x => x.split("="));
 		var data = {};
 		for (i in args) data[args[i][0].toLowerCase()] = args[i][1];
-		if (shop)
+		if (command.match(/^exists/i))
+		{
+			let gameSwitch = +args[0][0] || 0;
+			if (gameSwitch) $gameSwitches.setValue(gameSwitch, $$.exists(shopName));
+		}
+		else if (shop)
 		{
 			if (command.match(/^open/i))
 			{
@@ -439,6 +474,10 @@ Aesica.Toolkit.improvedShopVersion = 1.5;
 			{
 				$$.sortShopItems(shopName);
 			}
+			else if (command.match(/^delete/i))
+			{
+				$$.deleteShop(shopName);
+			}
 		}
 		// params: nosell:true|false buyrate:1 sellrate:0.5
 		else if (command.match(/^create/i))
@@ -457,6 +496,15 @@ Aesica.Toolkit.improvedShopVersion = 1.5;
 		shop.goods = [];
 		$$.shopList[shopName] = shop;
 		return shop;
+	};
+	$$.deleteShop = function(shopName)
+	{
+		
+		delete $$.shopList[shopName];
+	};
+	$$.exists = function(shopName)
+	{
+		return !!$$.shopList[shopName];
 	};
 	$$.addItemToShop = function(shop, itemId, itemType, qty=null, itemCost=null, markUp=1)
 	{
