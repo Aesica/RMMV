@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CustomMP = true;
 var Aesica = Aesica || {};
 Aesica.CMP = Aesica.CMP || {};
-Aesica.CMP.version = 1.7;
+Aesica.CMP.version = 1.8;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.customMpVersion = 1.0;
 /*:
-* @plugindesc v1.7 Adds the ability to customize MP styling and recovery for each class
+* @plugindesc v1.8 Adds the ability to customize MP styling and recovery for each class
 *
 * @author Aesica
 *
@@ -364,6 +364,7 @@ Aesica.Toolkit.customMpVersion = 1.0;
 				this.drawText(text, x, y, dw, 'right');
 				dw = dw - this.textWidth(text) - 4;
 			}
+			this.drawOtherCost(skill, x, y, dw);
 		}
 		this.resetFontSettings();
 	}
