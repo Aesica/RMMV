@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_LootBox = true;
 var Aesica = Aesica || {};
 Aesica.LootBox = Aesica.LootBox || {};
-Aesica.LootBox.version = 1.0;
+Aesica.LootBox.version = 1.1;
 /*:
-* @plugindesc v1.0 Retrieves a random item from a specified list
+* @plugindesc v1.1 Retrieves a random item from a specified list
 *
 * @author Aesica
 *
@@ -296,7 +296,7 @@ Aesica.LootBox.version = 1.0;
 			console.log("AES_LootBox: Failed to parse loot box list");
 			console.log($$.params.lootBoxList);
 		}
-		$$.box = result;
+		return $$.box = result;
 	};
 /**-------------------------------------------------------------------
 	Lootbox logic
