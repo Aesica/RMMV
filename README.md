@@ -278,6 +278,9 @@ Info:  Adds the ability to create random-reward "loot boxes" to your game.  I ho
 - When invoked, will award the player something from that list, based on weight, etc.
 - For advanced users, these can also be built dynamically during runtime
 
+**5/29/2020 - 1.1**
+- Fixed a bug that could cause the game to crash when trying to access a lootbox from a saved game that existed prior to installing this plugin.  The lootbox data object is now automatically initialized for these older saves if it doesn't exist already.
+
 ----------------------------------------------------------------------------------------------------------------------
 
 ### AES_DiceFunctions (bonus plugin)
