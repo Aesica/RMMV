@@ -180,6 +180,9 @@ Info:  Allows extra customizations for MP
 - Can hide between-rounds MP regen on certain classes with note tags.  Other forms of MP regen show normally
 - Added a gainSilentMp function for restoring MP without displaying any numbers in combat.
 
+**5-29-2020 - 1.8**
+- Compatibilty fix for YEP_X_LimitedSkillUses, and by proxy, any other Yanfly plugins that might display other types of skill costs via Window_SkillList.prototype.drawOtherCost.  These "other" types of costs should now display correctly along with HP, MP, and TP costs.
+
 **9-25-2019 - 1.7**
 - Added internal functionality for use with AES_BattlerGauge.  This version (or later) is required for displaying custom MP colors with that plugin
 
