@@ -283,6 +283,16 @@ Info:  Adds the ability to create random-reward "loot boxes" to your game.  I ho
 
 ----------------------------------------------------------------------------------------------------------------------
 
+### AES_X_ActSeqRndTarget
+Info:  Adds random a random target selector to Yanfly's action sequence packs.  Requires YEP_BattleEngineCore, as well as at least 1 of the 3 action sequence packs to do anything meaningful.
+- Details are in the plugin help
+- Allows for selecting X number of random targets from a specified group, ensuring the same target isn't selected more than once
+- Can select from actors, enemies, user's friends, user's opponents, everyone on the field, or manually selected targets
+- These groups can be alive, dead, or both
+- Can optionally exclude the user or the target(s) selected by the player
+
+----------------------------------------------------------------------------------------------------------------------
+
 ### AES_DiceFunctions (bonus plugin)
 Info:  Allows for dice functions to be used in damage formulas
 - Pretty straightforwad:  d12(a.atk) - d4(b.def) etc
