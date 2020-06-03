@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_ImprovedShop = true;
 var Aesica = Aesica || {};
 Aesica.ImprovedShop = Aesica.ImprovedShop || {};
-Aesica.ImprovedShop.version = 1.2;
+Aesica.ImprovedShop.version = 1.21;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.improvedShopVersion = 1.5;
 /*:
-* @plugindesc v1.2 Enhances shops by adding limited quantities, custom buy/sell rates, item relisting, and more
+* @plugindesc v1.21 Enhances shops by adding limited quantities, custom buy/sell rates, item relisting, and more
 * @author Aesica
 *
 * @param Default Buy Rate
@@ -97,6 +97,13 @@ Aesica.Toolkit.improvedShopVersion = 1.5;
 * Creates a shop called RareImports that only sells items, and does so at 
 * 200% of the item's base value.
 * 
+* ----------------------------------------------------------------------
+* Shop name open
+*
+* Opens the specified shop, thus:
+*
+* shop Butts open
+*
 * ----------------------------------------------------------------------
 * Shop name delete
 * 
