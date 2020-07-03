@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_ActSeqEx = true;
 var Aesica = Aesica || {};
 Aesica.ASEX = Aesica.ASEX || {};
-Aesica.ASEX.version = 1.1;
+Aesica.ASEX.version = 1.2;
 /*:
-* @plugindesc v1.1 Adds a few extra features to the yanfly action sequence system
+* @plugindesc v1.2 Adds a few extra features to the yanfly action sequence system
 * @author Aesica
 *
 * @help
@@ -90,17 +90,27 @@ Aesica.ASEX.version = 1.1;
 * EVERYONE, EVERYBODY
 * Selects both actors and enemies
 *
-* Excludes:
+* Special Filters:
 *
 * NOT USER
 * Excludes the user from the selection
 * 
 * NOT FOCUS
 * Excludes the current target(s) from the selection
+*
+* DRAWABLE
+* If included, random targeting is influenced by target rate (tgr) instead
+* of general random selection.
+*
+* TAUNTABLE
+* Requires YEP_Taaunt to work.  If included, will prioritize targets affected
+* by physical taunt, magical taunt, or certain taunt if the skill type matches.
+* Note that when working with multiple random targets, normal targets will be
+* selected once all available taunters have been selected.
 * 
 * If selecting more than one random target, note that the same target will not
 * be selected twice.  Trying to select more random targets than are available
-* will result in all available targets being selected.
+* will result in all available targets being used up.
 *
 * ----------------------------------------------------------------------
 * SAME
@@ -125,13 +135,10 @@ Aesica.ASEX.version = 1.1;
 * wait for animation
 * action effect: same
 *
-* ...and this one will play the animation on a random target, but will apply
-* the effect to another.  This is why the SAME selector is so important when
-* using random selections:
-*
-* action animation: random 1 opponent
+* action animation: random 3 opponents tauntable drawable
 * wait for animation
-* action effect: random 1 opponent
+* action effect: same
+*
 */
 
 (function($$)
@@ -156,13 +163,17 @@ Aesica.ASEX.version = 1.1;
 		{
 			string = string.toUpperCase();
 			let targetPool = [];
+			let tauntPool = [];
 			let group = string.match(/TARGET|TARGETS|ENEMY|ENEMIES|ACTOR|ACTORS|FRIEND|FRIENDS|OPPONENT|OPPONENTS|EVERYONE|EVERYBODY/);
 			let status = string.match(/DEAD|ALL|ALIVE/);
-			let exclude = string.match(/NOT USER|NOT FOCUS/);
+			let excludeFocus = string.match(/NOT FOCUS/);
+			let excludeUser = string.match(/NOT USER/);
+			let canTaunt = string.match(/TAUNTABLE/);
+			let canDraw = string.match(/DRAWABLE/);
 			let qty = +string.match(/[0-9]+/) || 1;
+			let tgrSum, tgrRandom, target, currentPool;
 			group = group ? group[0] : "TARGET";
 			status = status ? status[0] : "ALIVE";
-			exclude = exclude ? exclude[0] : null;
 			if (status === "DEAD")
 			{
 				if (group === "TARGET" || group === "TARGETS") targetPool = this._targets.slice();
@@ -190,24 +201,83 @@ Aesica.ASEX.version = 1.1;
 				else if (group === "OPPONENT" || group === "OPPONENTS") targetPool = this._action.opponentsUnit().aliveMembers().slice();
 				else if (group === "EVERYBODY" || group === "EVERYONE") targetPool = $gameParty.aliveMembers().concat($gameTroop.aliveMembers());
 			}
-			if (exclude === "NOT USER" && targetPool.indexOf(this._subject) >= 0) targetPool.splice(targetPool.indexOf(this._subject), 1);
-			else if (exclude === "NOT FOCUS")
+			if (canTaunt && this._action.isRandomTargetTauntable())
+			{
+				if (this._action.isPhysical()) tauntPool = targetPool.filter(x => x.tauntPhysical());
+				else if (this._action.isMagical()) tauntPool = targetPool.filter(x => x.tauntMagical());
+				else if (this._action.isCertainHit()) tauntPool = targetPool.filter(x => x.tauntCertain());
+			}
+			if (excludeUser && targetPool.indexOf(this._subject) >= 0) targetPool.splice(targetPool.indexOf(this._subject), 1);
+			if (excludeFocus)
 			{
 				for (let i = targetPool.length - 1; i >= 0; i--)
 					if (this._targets.contains(targetPool[i])) targetPool.splice(i, 1);
+				for (let i = tauntPool.length - 1; i >= 0; i--)
+					if (this._targets.contains(tauntPool[i])) tauntPool.splice(i, 1);
 			}
+			tauntPool = tauntPool.filter(x => x.isAppeared());
 			targetPool = targetPool.filter(x => x.isAppeared());
 			if (qty >= targetPool.length) targets = targetPool;
 			else
 			{
 				for (let i = 0; i < qty; i++)
-					targets.push(targetPool.splice(Math.floor(Math.random() * targetPool.length), 1)[0]);
+				{
+					target = null;
+					if (tauntPool.length > 0) currentPool = tauntPool;
+					else currentPool = targetPool;
+					if (canDraw)
+					{
+						tgrSum = currentPool.reduce((s, obj) => s + obj.tgr, 0);
+						tgrRandom = Math.random() * tgrSum;
+						currentPool.forEach(function(member)
+						{
+							tgrRandom -= member.tgr;
+							if (tgrRandom <= 0 && !target) target = member;
+						});
+					}
+					else target = currentPool[Math.floor(Math.random() * currentPool.length)];
+					if (target)
+					{
+						if (tauntPool.contains(target)) tauntPool.splice(tauntPool.indexOf(target), 1);
+						if (targetPool.contains(target)) targetPool.splice(targetPool.indexOf(target), 1);
+						targets.push(target);
+					}
+				}
 			}
 		}
 		else if (string.match(/^same/i)) targets = this._action._aesLastASTargets || [];
 		else targets = $$.BattleManager_makeActionTargets.call(this, string);
 		this._action._aesLastASTargets = targets;
 		return targets;
-	}
+	};
+	Game_Action.prototype.isRandomTargetTauntable = function()
+	{
+		var result;
+		if (!Imported.YEP_Taunt) result = false;
+		else if (this.isPhysical() && this.subject().ignoreTauntPhysical()) result = false;
+		else if (this.isMagical() && this.subject().ignoreTauntMagical()) result = false;
+		else if (this.isCertainHit() && this.subject().ignoreTauntCertain()) result = false;
+		else result = true;
+		return result;
+	};
+		
 })(Aesica.ASEX);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
