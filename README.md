@@ -291,6 +291,11 @@ Info:  Adds extra features to Yanfly's action sequence packs.  Requires YEP_Batt
 - Can optionally exclude the user or the target(s) selected by the player
 - Details are in the plugin help
 
+**7/2/2020 - 1.2**
+- Added DRAWABLE to allow for random selection based on target rate (tgr) if desired
+- Added TAUNTABLE to prioritizes targets with matching taunt effects (requires YEP_Taunt)
+- Fixed a minor oversight that prevented NOT USER and NOT FOCUS from being used together
+
 **6/19/2020 - 1.1**
 - Added the "text" action sequence, which can be used to write text to the battle log window
 - Changed name of plugin to reflect this
