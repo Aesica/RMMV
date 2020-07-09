@@ -2,9 +2,9 @@ var Imported = Imported || {};
 Imported.AES_ActSeqEx = true;
 var Aesica = Aesica || {};
 Aesica.ASEX = Aesica.ASEX || {};
-Aesica.ASEX.version = 1.2;
+Aesica.ASEX.version = 1.3;
 /*:
-* @plugindesc v1.2 Adds a few extra features to the yanfly action sequence system
+* @plugindesc v1.3 Adds a few extra features to the yanfly action sequence system
 * @author Aesica
 *
 * @help
@@ -21,11 +21,39 @@ Aesica.ASEX.version = 1.2;
 * - Random target(s) selection
 * - Previously selected target(s) selection
 * - Displaying custom text in the battle log window
+* - Instantly kill target/targets/user/etc
+* - Attempt to apply a state to target(s), taking resistances into account
 *
+* ----------------------------------------------------------------------
+* Kill Targets
+*
+* KILL: targets
+*
+* Kills the specified target(s).  This is intended to be an unresistable
+* kill that disregards resistances, state rates, and immortal flags.
+*
+* Examples:
+* kill: targets
+* kill: user
+* kill: random 1 everybody
+* ----------------------------------------------------------------------
+* Apply State vs State Rates
+*
+* APPLY STATE X: targets
+*
+* Attempts to apply a state to the targets, making a random check against
+* their state rate.  This differs from Yanfly's "ADD STATE x: targets"
+* action sequence because his version ignores state rates and applies the
+* state 100% of the time.
+*
+* Examples:
+* apply state 5: opponents
+* apply state 1: targets
 * ----------------------------------------------------------------------
 * Custom Battle Log Text
 *
 * TEXT: Your text here
+*
 * Displays "Your Text Here" in the battle log, pretty straightforward
 * 
 * Example action sequence:
@@ -146,14 +174,72 @@ Aesica.ASEX.version = 1.2;
 	$$.BattleManager_processActionSequence = BattleManager.processActionSequence;
 	BattleManager.processActionSequence = function(actionName, actionArgs)
 	{
-		if (actionName === "TEXT") return this.actionText(actionArgs);
-		$$.BattleManager_processActionSequence.call(this, actionName, actionArgs);
-		return false;
+		var result = false;
+		if (actionName === "TEXT") result = this.actionText(actionArgs);
+		else if (actionName.match(/APPLY STATE[ ](\d+(?:\s*,\s*\d+)*)/i)) result = this.actionApplyState(actionName, actionArgs);
+		else if (actionName === "KILL") result = this.actionKill(actionArgs);
+		else result = $$.BattleManager_processActionSequence.call(this, actionName, actionArgs);
+		return result;
 	};
 	BattleManager.actionText = function(actionArgs)
 	{
 		BattleManager._logWindow.push("addText", "<CENTER>" + actionArgs.join(","));
 		return false;
+	};
+	BattleManager.actionKill = function(actionArgs)
+	{
+		var targets = this.makeActionTargets(actionArgs[0]);
+		var result = false;
+		for (let target of targets)
+		{
+			target.removeImmortal();
+			target._hp = 0;
+			target.refresh();
+			target.performCollapse();
+		}
+		return result;
+	};	
+	BattleManager.actionApplyState = function(actionName, actionArgs)
+	{
+		var targets = this.makeActionTargets(actionArgs[0]);
+		var result = false;
+		var show = false;
+		var states;
+		if (targets.length > 0)
+		{
+			show = actionArgs.some(x => x.match(/show/i));
+			if (actionName.match(/APPLY STATE[ ](\d+(?:\s*,\s*\d+)*)/i))
+			{
+				try
+				{
+					states = JSON.parse("[" + RegExp.$1.match(/\d+/g) + "]");
+				}
+				catch(e)
+				{
+					console.log("AES_X_ActSeqEx: Apply State has invalid parameters on " + this._action._item._dataClass + " id " + this._action._item._itemId);
+				}
+				targets.forEach(function(target)
+				{
+					for (let i of states)
+					{
+						if (Math.random() < target.stateRate(i))
+						{
+							if (target.deathStateId() === i && !target._prevImmortalState)
+							{
+								target.removeImmortal();
+								target.addState(i);
+								target.performCollapse();
+							}
+							else target.addState(i);
+							if (show) this._logWindow.displayActionResults(this._subject, target);
+						}
+					}
+				}, this);
+				result = true;
+			}
+			else console.log("AES_X_ActSeqEx: Apply State has invalid parameters on " + this._action._item._dataClass + " id " + this._action._item._itemId);
+		}
+		return result;
 	};
 	$$.BattleManager_makeActionTargets = BattleManager.makeActionTargets;
 	BattleManager.makeActionTargets = function(string)
@@ -262,22 +348,3 @@ Aesica.ASEX.version = 1.2;
 	};
 		
 })(Aesica.ASEX);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
