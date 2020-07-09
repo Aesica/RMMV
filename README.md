@@ -291,6 +291,10 @@ Info:  Adds extra features to Yanfly's action sequence packs.  Requires YEP_Batt
 - Can optionally exclude the user or the target(s) selected by the player
 - Details are in the plugin help
 
+**7/8/2020 - 1.3**
+- Added KILL: targets to instantly kill targets, ignoring state rates, resistances, and immortal flags
+- Added APPLY STATE x: targets which attempts to apply a state to targets, making a random check against their state rate (ADD STATE X does not do this)
+
 **7/2/2020 - 1.2**
 - Added DRAWABLE to allow for random selection based on target rate (tgr) if desired
 - Added TAUNTABLE to prioritizes targets with matching taunt effects (requires YEP_Taunt)
