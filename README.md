@@ -164,6 +164,12 @@ Info:  Gives you more control over the various actor commands and such
 - Can add individual skills as actor commands
 - Features a basic limit break system that utilizes TP
 
+**8/23/2020 - 1.4**
+- Removed the plugin paramter for selecting the order of single skill commands vs skilltype commands
+- Replaced the removed plugin parameter with one that allows the user to customize the order of ALL command types
+- The designated Limit command (if used) can be included in the command order to create it in that particular location rather than having it overwrite the attack command.  Excluding "limit" from the command order will cause it to overwrite the attack command as it did previously.
+- Added a <Seal Item> note tag that allows the item command to be sealed by states, equips, etc
+
 **4/7/2020 - 1.3**
 - Added the ability to place commands into left and right sub-menus in the actor command window. FF-style Guard is now a thing
 - Added compatibility for putting the Equip command from YEP_ChangeBattleEquip into the left or right menus
