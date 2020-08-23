@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CommandControl = true;
 var Aesica = Aesica || {};
 Aesica.CommandControl = Aesica.CommandControl || {};
-Aesica.CommandControl.version = 1.3;
+Aesica.CommandControl.version = 1.4;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.commandControlVersion = 1.1;
 /*:
-* @plugindesc v1.25 Gain a greater level of control over actor battle commands.
+* @plugindesc v1.4 Gain a greater level of control over actor battle commands.
 *
 * @author Aesica
 *
@@ -21,13 +21,6 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * @type number
 * @min 0
 * @default 100
-*
-* @param Single Skill Command Order
-* @desc Sets whether single skill commands appear before or after skill category commands (Magic, Special, etc)
-* @type boolean
-* @on Before
-* @off After
-* @default true
 *
 * @param Enable Attack
 * @desc Shows or hides the "Attack" command in battle.
@@ -49,6 +42,10 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * @on Show
 * @off Hide
 * @default true
+*
+* @param Command Order
+* @desc Comma-separated list of command type order.  See description for details
+* @default attack, single, skillset, guard, item, equip
 *
 * @param Left Command List
 * @desc List of commands to be shown when the player presses left in the actor command window
@@ -114,6 +111,37 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 * equip a shield with <Guard Command: Show> and gain access to guard.  He can
 * even use guard if guard is disabled by default for everyone else.
 * 
+* ----------------------------------------------------------------------
+* Seal Item
+* ----------------------------------------------------------------------
+* Allows you to seal the item command via note tag just like how you might use,
+* say, a state to seal individual skills or skill command sets.  To seal the
+* item command, just use the following note tag in actors, classes, equips,
+* or states:
+*
+* <Seal Item>
+*
+* ----------------------------------------------------------------------
+* Command Order
+* ----------------------------------------------------------------------
+* Determines the order commands appear in, based on command type.  The various
+* types are:
+*
+* - Attack     Standard attack command, or attack skill replacement
+* - Limit      The Limit skill command used by this plugin.  If not included
+*                 in the command order and an actor becomes eligible to use it,
+*                 the Limit command will temporarily overwrite the attack command.
+* - Single     Single skill commands added via this plugin.  If using more than
+*                 one, the order of each single skill command is determined by
+*                 its order in the database.
+* - Skills     Skill category commands, such as Magic or Special.  If using more
+*                 than one, the order of skill command is determined by its order
+*                 in the database.
+* - Guard      The guard skill
+* - Item       The item command
+* - Equip      The equip command added by YEP_X_ChangeBattleEquip (requires
+*                 the aforementioned plugin)
+
 * ----------------------------------------------------------------------
 * Relocate commands to left/right submenus
 * ----------------------------------------------------------------------
@@ -261,10 +289,11 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 	$$.params = {};
 	$$.params.limitCommand = +$$.pluginParameters["Limit Break Command"] || 0;
 	$$.params.limitThreshold = +$$.pluginParameters["Limit Break Threshold"] || 0;
-	$$.params.singleSkillCommandOrder = String($$.pluginParameters["Single Skill Command Order"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableAttack = String($$.pluginParameters["Enable Attack"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableGuard = String($$.pluginParameters["Enable Guard"]).toLowerCase() === "false" ? false : true;
 	$$.params.enableItem = String($$.pluginParameters["Enable Item"]).toLowerCase() === "false" ? false : true;
+	$$.params.commandOrder = String($$.pluginParameters["Command Order"]).toLowerCase().split(",").map(x => x.trim());
+	$$.params.limitReplacesAttack = $$.params.commandOrder.indexOf("limit") < 0;
 	$$.params.leftCommandList = processList(String($$.pluginParameters["Left Command List"])) || [];
 	$$.params.rightCommandList = processList(String($$.pluginParameters["Right Command List"])) || [];
 	$$.params.hiddenSkillCommands = String($$.pluginParameters["Hidden Skill Commands"]).split(" ").map(x => +x || 0);
@@ -359,22 +388,39 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 	{
 		if (this._actor)
 		{
-			if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId(this._actor.attackSkillId()) === this._commandPage) this.addLimitCommand();
-			else if (this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(TextManager.attack) === this._commandPage) this.addAttackCommand();
-			if ($$.params.singleSkillCommandOrder)
+			for (let currentCommand of $$.params.commandOrder)
 			{
-				this.addSingleSkillCommands();
-				this.addSkillCommands();
+				switch(currentCommand)
+				{
+					case "attack":
+						if ($$.params.limitReplacesAttack)
+						{
+							if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId(this._actor.attackSkillId()) === this._commandPage) this.addLimitCommand();
+							else if (this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(TextManager.attack) === this._commandPage) this.addAttackCommand();
+						}
+						else if (this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(TextManager.attack) === this._commandPage) this.addAttackCommand();
+						break;
+					case "limit":
+						if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId(this._actor.attackSkillId()) === this._commandPage) this.addLimitCommand();
+						break;
+					case "single":
+						this.addSingleSkillCommands();
+						break;
+					case "skills":
+						this.addSkillCommands();
+						break;
+					case "guard":
+						if (this._actor.commandEnabled("guard", $$.params.enableGuard)) this.addGuardCommand();
+						break;
+					case "item":
+						if (this._actor.commandEnabled("item", $$.params.enableItem)) this.addItemCommand();
+						break;
+					case "equip":
+						// YEP_X_ChangeBattleEquip compatibility
+						if (Imported.YEP_X_ChangeBattleEquip) this.addEquipChangeCommand();
+						break;
+				}
 			}
-			else
-			{
-				this.addSkillCommands();
-				this.addSingleSkillCommands();
-			}
-			if (this._actor.commandEnabled("guard", $$.params.enableGuard)) this.addGuardCommand();
-			if (this._actor.commandEnabled("item", $$.params.enableItem)) this.addItemCommand();
-			// YEP_X_ChangeBattleEquip compatibility
-			if (Imported.YEP_X_ChangeBattleEquip) this.addEquipChangeCommand();
 		}
 	};
 	$$.Window_ActorCommand_addCommand = Window_ActorCommand.prototype.addCommand;
@@ -476,9 +522,9 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 		if (battler)
 		{
 			commandList = battler.getTag(tagName, true).join(",").split(",");
-			for (i in commandList)
+			for (let i of commandList)
 			{
-				skillId = +commandList[i]
+				skillId = +i;
 				if (skillId && this.commandListId(skillId) === this._commandPage)
 				{
 					canUse = battler.canUse($dataSkills[skillId]);
@@ -498,6 +544,12 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 			var name = $dataSystem.skillTypes[stypeId];
 			if (this.commandListId(name) === this._commandPage && !$$.params.hiddenSkillCommands.contains(stypeId)) this.addCommand(name, 'skill', true, stypeId);
 		}, this);
+	};
+	$$.Window_ActorCommand_addItemCommand = Window_ActorCommand.prototype.addItemCommand;
+	Window_ActorCommand.prototype.addItemCommand = function()
+	{
+		if (this._actor && this._actor.getTag("Seal Item", true).length > 0) this.addCommand(TextManager.item, 'item', false);
+		else $$.Window_ActorCommand_addItemCommand.call(this);
 	};
 	Window_ActorCommand.prototype.addLimitCommand = function()
 	{
