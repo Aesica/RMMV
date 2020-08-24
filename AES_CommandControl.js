@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CommandControl = true;
 var Aesica = Aesica || {};
 Aesica.CommandControl = Aesica.CommandControl || {};
-Aesica.CommandControl.version = 1.4;
+Aesica.CommandControl.version = 1.41;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.commandControlVersion = 1.1;
 /*:
-* @plugindesc v1.4 Gain a greater level of control over actor battle commands.
+* @plugindesc v1.41 Gain a greater level of control over actor battle commands.
 *
 * @author Aesica
 *
@@ -45,7 +45,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 *
 * @param Command Order
 * @desc Comma-separated list of command type order.  See description for details
-* @default attack, single, skillset, guard, item, equip
+* @default attack, single, skills, guard, item, equip
 *
 * @param Left Command List
 * @desc List of commands to be shown when the player presses left in the actor command window
