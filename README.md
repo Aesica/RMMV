@@ -2,13 +2,12 @@ If you find these helpful, feel free to support me on Patreon:
 https://www.patreon.com/aesica
 
 ## Aesica's RMMV Plugins - Terms of Use
-These terms apply to every RMMV plugin in this repo:
-- Free to use in both free and commercial projects as long as I am given credit.
-- Forked versions of these plugins are fine as long as I am given credit.
-- You may edit the code as needed to fit your game
-- You may NOT remove my name from the @author section, you may NOT remove the link to this readme from the @help section, and you may NOT attempt to otherwise pass my work off as your own (come on, we all know that's a dick move, so don't be one~)
+
+- Aesica's plugins (hereafter referred to as "the plugins") are free for game developers (hereafter referred to as "you" or "your") to use in both free and commercial game projects (hereafter referred to as "game" or "games") as long as Aesica (hereafter referred to as "I" and "my") is given credit.
+- Edited, forked or redistributed versions of these plugins (hereafter referred to as "copies") are fine as long as: 1. I am retained in the credits of any copies, 2. The copies must remain free, and 3. The copies must also retain an unmodified version of these licensing terms.
+- You may NOT remove my name from the @author section, you may NOT remove any links to my github repo or my patreon page from the @help section, and you may NOT attempt to otherwise pass my work off as your own (come on, we all know that's a dick move, so don't be one~)
 - A copy of your game (once completed) would be nice so I can see how my scripts are being used, but it's not required.
-- **Regarding AES_LootBox specifically:**  You are NOT authorized to use this plugin to create microtransaction-based loot box systems in any game using this plugin.  This includes, but is not limited to, prize packs or keys (items required to open prize packs) that are purchased with real-world money or with a currency that is awarded as a direct (or indirect) result of spending real-world money via microtransactions.  In short, this plugin is fine for use in commercial games as long as they're not trying to profit off loot box systems.  This limitation supercedes any of the other terms and conditions listed here.
+- **Regarding AES_LootBox specifically:**  You are NOT authorized to use AES_LootBox.js or copies thereof (hereafter refered to as "the lootbox plugin") to create microtransaction-based loot box systems in any game using the lootbox plugin. This includes, but is not limited to, prize packs or keys (items required to open prize packs) that are purchased with real-world money or with a currency that is awarded as a direct (or indirect) result of spending real-world money via microtransactions. In short, the lootbox plugin is fine for use in games as long as those games aren't designed around profiting off the mechanics of the loot box plugin. This limitation supercedes any of the other terms and conditions listed here.
 
 ## How to Credit Me
 - List my name (Aesica) in your game's credits under your scripts/code section, or under "Scripting" if you don't yet have a scripting section.  Easy peasy, right? :D
