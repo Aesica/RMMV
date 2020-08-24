@@ -164,6 +164,9 @@ Info:  Gives you more control over the various actor commands and such
 - Can add individual skills as actor commands
 - Features a basic limit break system that utilizes TP
 
+**8/23/2020 - 1.41**
+- Fixed a minor issue with command order's default settings incorrectly listing "skillset" instead of "skills" which, if left as default, would hide all of a battler's grouped skill commands, such as magic, special, etc.
+
 **8/23/2020 - 1.4**
 - Removed the plugin paramter for selecting the order of single skill commands vs skilltype commands
 - Replaced the removed plugin parameter with one that allows the user to customize the order of ALL command types
