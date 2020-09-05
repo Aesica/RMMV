@@ -163,6 +163,9 @@ Info:  Gives you more control over the various actor commands and such
 - Can add individual skills as actor commands
 - Features a basic limit break system that utilizes TP
 
+**9/4/2020 - 1.42**
+- Fixed a bug where the "limit" skill couldn't be placed in the right or left side windows. To properly add it now, make sure "limit" is included in the command order list somewhere, then put the actual name of the command in either the right or left command lists as desired.
+
 **8/23/2020 - 1.41**
 - Fixed a minor issue with command order's default settings incorrectly listing "skillset" instead of "skills" which, if left as default, would hide all of a battler's grouped skill commands, such as magic, special, etc.
 
