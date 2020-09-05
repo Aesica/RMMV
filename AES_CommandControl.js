@@ -2,11 +2,11 @@ var Imported = Imported || {};
 Imported.AES_CommandControl = true;
 var Aesica = Aesica || {};
 Aesica.CommandControl = Aesica.CommandControl || {};
-Aesica.CommandControl.version = 1.41;
+Aesica.CommandControl.version = 1.42;
 Aesica.Toolkit = Aesica.Toolkit || {};
 Aesica.Toolkit.commandControlVersion = 1.1;
 /*:
-* @plugindesc v1.41 Gain a greater level of control over actor battle commands.
+* @plugindesc v1.42 Gain a greater level of control over actor battle commands.
 *
 * @author Aesica
 *
@@ -401,7 +401,7 @@ Aesica.Toolkit.commandControlVersion = 1.1;
 						else if (this._actor.commandEnabled("attack", $$.params.enableAttack) && this.commandListId(TextManager.attack) === this._commandPage) this.addAttackCommand();
 						break;
 					case "limit":
-						if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId(this._actor.attackSkillId()) === this._commandPage) this.addLimitCommand();
+						if (this._actor.tp >= $$.params.limitThreshold && $$.params.limitCommand > 0 && $$.params.limitCommand < $dataSystem.skillTypes.length && this._actor.hasLimitSkill() && this.commandListId($dataSystem.skillTypes[$$.params.limitCommand]) === this._commandPage) this.addLimitCommand();
 						break;
 					case "single":
 						this.addSingleSkillCommands();
