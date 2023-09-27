@@ -3,8 +3,6 @@ https://www.patreon.com/aesica
 
 ## Aesica's RMMV Plugins - Terms of Use
 
-## Aesica's RMMZ Plugins - Terms of Use
-
 - Aesica's plugins (hereafter referred to as "the plugins") are free for game developers (hereafter referred to as "developer", "developers", or "you") to use in both free and commercial game projects (hereafter referred to as "game" or "games") as long as Aesica is given credit somewhere in the game's credits.
 - Forked, ported, edited, or redistributed versions of the plugins (hereafter referred to as "fork" or "forks") are fine as long as: 1. Aesica is retained in the credits of the forks, 2. The forks must remain free, 3. The forks must remain open-source, 4. The forks may NOT be obfuscated either in part or in whole, and 5. The forks must retain an unmodified version of these licensing terms in their @help section, as either a link to https://github.com/Aesica/RMMV/blob/master/README.md or as a text copy of the terms of use section located at that URL.
 - You may NOT remove "Aesica" from the @author section, you may NOT remove any links to Aesica's github repo from the @help section, and you may NOT attempt to otherwise pass my work off as your own (come on, we all know that's a dick move, so don't be one~)
