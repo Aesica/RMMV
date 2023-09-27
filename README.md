@@ -1,5 +1,4 @@
-If you find these helpful, feel free to support me on Patreon:
-https://www.patreon.com/aesica
+If you find these helpful, feel free to support me on Patreon: **TBA**
 
 ## Aesica's RMMV Plugins - Terms of Use
 
